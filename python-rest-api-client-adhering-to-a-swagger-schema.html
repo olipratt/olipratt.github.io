@@ -1,0 +1,175 @@
+
+<!DOCTYPE html>
+<html lang="english">
+<head>
+  <link href='//fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,700,400italic' rel='stylesheet' type='text/css'>
+
+    <link rel="stylesheet" type="text/css" href="http://olipratt.co.uk/theme/stylesheet/style.min.css">
+
+  <link rel="stylesheet" type="text/css" href="http://olipratt.co.uk/theme/pygments/monokai.min.css">
+  <link rel="stylesheet" type="text/css" href="http://olipratt.co.uk/theme/font-awesome/css/font-awesome.min.css">
+
+
+    <link href="http://olipratt.co.uk/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="Oli Pratt Atom">
+
+
+    <link rel="shortcut icon" href="/static/images/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/static/images/favicon.ico" type="image/x-icon">
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="HandheldFriendly" content="True" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="" />
+
+
+<meta name="author" content="Oli Pratt" />
+<meta name="description" content="After building a REST API I left it alone for a while before coming back to try and get a client working properly. Similar goals here to back then - find a good library to use going forwards that does the heavy lifting and make a simple example project. I chose …" />
+<meta name="keywords" content="Python, REST, Swagger, pyswagger">
+<meta property="og:site_name" content="Oli Pratt"/>
+<meta property="og:title" content="Python REST API Client Adhering to a Swagger Schema"/>
+<meta property="og:description" content="After building a REST API I left it alone for a while before coming back to try and get a client working properly. Similar goals here to back then - find a good library to use going forwards that does the heavy lifting and make a simple example project. I chose …"/>
+<meta property="og:locale" content="en_US"/>
+<meta property="og:url" content="http://olipratt.co.uk/python-rest-api-client-adhering-to-a-swagger-schema.html"/>
+<meta property="og:type" content="article"/>
+<meta property="article:published_time" content="2017-02-11 19:13:00+00:00"/>
+<meta property="article:modified_time" content=""/>
+<meta property="article:author" content="http://olipratt.co.uk/author/oli-pratt.html">
+<meta property="article:section" content="REST"/>
+<meta property="article:tag" content="Python"/>
+<meta property="article:tag" content="REST"/>
+<meta property="article:tag" content="Swagger"/>
+<meta property="article:tag" content="pyswagger"/>
+<meta property="og:image" content="/static/images/site_logo.png">
+
+  <title>Oli Pratt &ndash; Python REST API Client Adhering to a Swagger Schema</title>
+
+</head>
+<body>
+  <aside>
+    <div>
+      <a href="http://olipratt.co.uk">
+        <img src="/static/images/site_logo.png" alt="Oli Pratt" title="Oli Pratt">
+      </a>
+      <h1><a href="http://olipratt.co.uk">Oli Pratt</a></h1>
+
+<p>Software Engineer</p>
+      <nav>
+        <ul class="list">
+          <li><a href="http://olipratt.co.uk/pages/about.html#about">About</a></li>
+
+          <li><a href="https://www.metaswitch.com/" target="_blank">Metaswitch</a></li>
+        </ul>
+      </nav>
+
+      <ul class="social">
+        <li><a class="sc-github" href="https://github.com/olipratt" target="_blank"><i class="fa fa-github"></i></a></li>
+        <li><a class="sc-rss" href="/feeds/all.atom.xml" target="_blank"><i class="fa fa-rss"></i></a></li>
+      </ul>
+    </div>
+
+
+  </aside>
+  <main>
+
+    <nav>
+      <a href="http://olipratt.co.uk">    Home
+</a>
+
+      <a href="/archives.html">Archives</a>
+      <a href="/categories.html">Categories</a>
+      <a href="/tags.html">Tags</a>
+
+      <a href="http://olipratt.co.uk/feeds/all.atom.xml">    Atom
+</a>
+
+    </nav>
+
+<article class="single">
+  <header>
+    <h1 id="python-rest-api-client-adhering-to-a-swagger-schema">Python REST API Client Adhering to a Swagger Schema</h1>
+    <p>
+          Posted on Sat 11 February 2017 in <a href="http://olipratt.co.uk/category/rest.html">REST</a>
+
+
+    </p>
+  </header>
+
+
+  <div>
+    <p>After <a href="http://olipratt.co.uk/python-rest-api-with-swaggerui.html">building a REST API</a> I left it alone for a while before coming back to try and get a client working properly.</p>
+<p>Similar goals here to back then - find a good library to use going forwards that does the heavy lifting and make a simple example project. I chose a simple microservice that provides an API for decks of playing cards - like a casino dealer type of thing - which would be a client of the datastore I created in the link above.</p>
+<h2>Choosing a Client Package</h2>
+<p>The standard seems to be to <a href="https://github.com/swagger-api/swagger-codegen">generate code</a> to meet a schema, but I'd rather load it dynamically into an app if possible.</p>
+<p>After a bit of looking I found <a href="http://bravado.readthedocs.io/en/latest/">Bravado</a> which looked promising. However, it was a pain to install - it relies on the twisted package and that doesn't seem to install on Windows through pip successfully, so after some failed attempts to get it to work I gave up. I figure it's not worth using if it's going to be a pain for others to install - shame :(.</p>
+<p>Next up was <a href="http://pyswagger.readthedocs.io/en/latest/">pyswagger</a> - it seems to provide all the functionality and be well maintained (commits in the past few days when I wrote this). The API doesn't look as polished to me when compared to <code>bravado</code> above, but it worked fine in practice.</p>
+<p>On the testing point - <code>pyswagger</code> uses  <code>requests</code> for HTTP requests, so we can easily test using the <a href="https://github.com/getsentry/responses">responses</a> library to provide mock responses to them.</p>
+<h2>The First Test</h2>
+<p>This was painful to get working, but as always trivial to fix in the end.</p>
+<p>I needed to load in the schema, and then intercept the requests over the network for each API call. Intercepting the API calls was trivial with <code>responses</code>, but loading in the schema turned out to be less so.</p>
+<p>There were two approaches I could see:</p>
+<ul>
+<li><code>pyswagger</code> lets you load in a schema from file, so just pass it a file name</li>
+<li>intercept the request for the schema over the network</li>
+</ul>
+<p>However, both failed when I tried:</p>
+<ul>
+<li>if I loaded in the schema from file, <code>pyswagger</code> would then try and make API requests using the <code>file</code> scheme, which causes it to fall over as that's not a <a href="https://github.com/mission-liao/pyswagger/blob/cff50d0b49da984666e1a350cff3e7bdf71d0b13/pyswagger/contrib/client/requests.py#L11">supported scheme</a> for that part it seems.</li>
+<li>the request for the schema over the network uses <a href="https://github.com/mission-liao/pyswagger/blob/cff50d0b49da984666e1a350cff3e7bdf71d0b13/pyswagger/getter.py#L136"><code>urllib.urlopen</code> rather than <code>requests</code></a> so I couldn't easily intercept it with <code>responses</code> and would have to do more mocking of the deep internals of <code>pyswagger</code>, which seemed wrong.</li>
+</ul>
+<p>Lots of trial-and-error and reading of the <code>pyswagger</code> source later I found the solution in the <a href="https://github.com/mission-liao/pyswagger/blob/cff50d0b49da984666e1a350cff3e7bdf71d0b13/pyswagger/tests/contrib/client/test_requests.py#L28">tests of the client in <code>pyswagger</code> itself</a>. They were doing exactly what I was trying in the first bullet above - loading in the schema from file then intercepting API requests - so why were their API requests working? It turns out their schema had two entries not added by <code>Flask-RESTPlus</code> - <a href="https://github.com/mission-liao/pyswagger/blob/cff50d0b49da984666e1a350cff3e7bdf71d0b13/pyswagger/tests/data/v2_0/wordnik/swagger.json#L16"><code>host</code></a> and <a href="https://github.com/mission-liao/pyswagger/blob/cff50d0b49da984666e1a350cff3e7bdf71d0b13/pyswagger/tests/data/v2_0/wordnik/swagger.json#L40"><code>schemes</code></a>.</p>
+<p>So I just needed this in top level of my schema saved in a file for the tests:</p>
+<div class="highlight"><pre><span></span><span class="p">{</span>
+  <span class="nt">&quot;host&quot;</span><span class="p">:</span> <span class="s2">&quot;127.0.0.1:5000&quot;</span><span class="p">,</span>
+   <span class="nt">&quot;schemes&quot;</span><span class="p">:[</span>
+      <span class="s2">&quot;http&quot;</span>
+   <span class="p">],</span>
+   <span class="err">...</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>With that, <code>pyswagger</code> can load schema from file for tests, and then send API requests over HTTP to that address, and we can use <code>responses</code> to catch those and respond to them.</p>
+<p>Phew!</p>
+<h2>Overall</h2>
+<p>Once I had wasted far too long trying to get a test working, everything else was straightforward, basically just following the <a href="https://github.com/mission-liao/pyswagger#tutorial">tutorials linked in the <code>pyswagger</code> readme</a>.</p>
+<p>When you have loaded in the schema to <code>pyswagger</code>, you just reference API calls by name in the schema, which <code>Flask-RESTPlus</code> auto-generates from the class names you give to resources, and you can rename if you want - details of both of those bits of logic <a href="https://flask-restplus.readthedocs.io/en/stable/swagger.html#documenting-the-methods">here</a>. <code>pyswagger</code> makes sure you pass in all the right arguments in the right format, so if you have models in the schema you pretty much have to use the API correctly or any attempts will be rejected, which is great for catching bugs early.</p>
+<h2>Result</h2>
+<p>Here's the project - <a href="https://github.com/olipratt/microcarddeck">microcarddeck</a>. I didn't end up implementing much function because I didn't need to - I got to exercise the <code>pyswagger</code> package and get a feel for how to use it, and got a good simple bit of reference code to crib from in the future.</p>
+  </div>
+  <div class="tag-cloud">
+    <p>
+      <a href="http://olipratt.co.uk/tag/python.html">Python</a>
+      <a href="http://olipratt.co.uk/tag/rest.html">REST</a>
+      <a href="http://olipratt.co.uk/tag/swagger.html">Swagger</a>
+      <a href="http://olipratt.co.uk/tag/pyswagger.html">pyswagger</a>
+    </p>
+  </div>
+
+
+
+
+</article>
+
+    <footer>
+<p>&copy; Oli Pratt </p>
+<p>    Powered by <a href="http://getpelican.com" target="_blank">Pelican</a> - <a href="https://github.com/alexandrevicenzi/flex" target="_blank">Flex</a> theme by <a href="http://alexandrevicenzi.com" target="_blank">Alexandre Vicenzi</a>
+</p>    </footer>
+  </main>
+
+
+
+
+
+<script type="application/ld+json">
+{
+  "@context" : "http://schema.org",
+  "@type" : "Blog",
+  "name": " Oli Pratt ",
+  "url" : "http://olipratt.co.uk",
+  "image": "/static/images/site_logo.png",
+  "description": "Oli Pratt's Thoughts and Writings"
+}
+</script>
+</body>
+</html>
