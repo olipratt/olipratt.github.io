@@ -1,0 +1,223 @@
+
+<!DOCTYPE html>
+<html lang="english">
+<head>
+  <link href='//fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,700,400italic' rel='stylesheet' type='text/css'>
+
+    <link rel="stylesheet" type="text/css" href="http://olipratt.co.uk/theme/stylesheet/style.min.css">
+
+  <link rel="stylesheet" type="text/css" href="http://olipratt.co.uk/theme/pygments/monokai.min.css">
+  <link rel="stylesheet" type="text/css" href="http://olipratt.co.uk/theme/font-awesome/css/font-awesome.min.css">
+
+
+    <link href="http://olipratt.co.uk/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="Oli Pratt Atom">
+
+
+    <link rel="shortcut icon" href="/static/images/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/static/images/favicon.ico" type="image/x-icon">
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="HandheldFriendly" content="True" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="" />
+
+
+<meta name="author" content="Oli Pratt" />
+<meta name="description" content="While learning and reading up on C++11 recently, I came across the Short String Optimisation. I'd at some point been told (or somehow got it into my head), that C unions are generally dangerous and are something you should steer well clear of, so I'd never really known …" />
+<meta name="keywords" content="C++, optimisation, performance">
+<meta property="og:site_name" content="Oli Pratt"/>
+<meta property="og:title" content="The C++ Short String Optimisation"/>
+<meta property="og:description" content="While learning and reading up on C++11 recently, I came across the Short String Optimisation. I'd at some point been told (or somehow got it into my head), that C unions are generally dangerous and are something you should steer well clear of, so I'd never really known …"/>
+<meta property="og:locale" content="en_US"/>
+<meta property="og:url" content="http://olipratt.co.uk/the-cpp-short-string-optimisation.html"/>
+<meta property="og:type" content="article"/>
+<meta property="article:published_time" content="2016-11-19 12:28:00+00:00"/>
+<meta property="article:modified_time" content=""/>
+<meta property="article:author" content="http://olipratt.co.uk/author/oli-pratt.html">
+<meta property="article:section" content="Performance"/>
+<meta property="article:tag" content="C++"/>
+<meta property="article:tag" content="optimisation"/>
+<meta property="article:tag" content="performance"/>
+<meta property="og:image" content="/static/images/site_logo.png">
+
+  <title>Oli Pratt &ndash; The C++ Short String Optimisation</title>
+
+</head>
+<body>
+  <aside>
+    <div>
+      <a href="http://olipratt.co.uk">
+        <img src="/static/images/site_logo.png" alt="Oli Pratt" title="Oli Pratt">
+      </a>
+      <h1><a href="http://olipratt.co.uk">Oli Pratt</a></h1>
+
+<p>Software Engineer</p>
+      <nav>
+        <ul class="list">
+          <li><a href="http://olipratt.co.uk/pages/about.html#about">About</a></li>
+
+          <li><a href="https://www.metaswitch.com/" target="_blank">Metaswitch</a></li>
+        </ul>
+      </nav>
+
+      <ul class="social">
+        <li><a class="sc-github" href="https://github.com/olipratt" target="_blank"><i class="fa fa-github"></i></a></li>
+        <li><a class="sc-rss" href="/feeds/all.atom.xml" target="_blank"><i class="fa fa-rss"></i></a></li>
+      </ul>
+    </div>
+
+
+  </aside>
+  <main>
+
+    <nav>
+      <a href="http://olipratt.co.uk">    Home
+</a>
+
+      <a href="/archives.html">Archives</a>
+      <a href="/categories.html">Categories</a>
+      <a href="/tags.html">Tags</a>
+
+      <a href="http://olipratt.co.uk/feeds/all.atom.xml">    Atom
+</a>
+
+    </nav>
+
+<article class="single">
+  <header>
+    <h1 id="the-cpp-short-string-optimisation">The C++ Short String Optimisation</h1>
+    <p>
+          Posted on Sat 19 November 2016 in <a href="http://olipratt.co.uk/category/performance.html">Performance</a>
+
+
+    </p>
+  </header>
+
+
+  <div>
+    <p>While learning and reading up on C++11 recently, I came across the Short String Optimisation.</p>
+<p>I'd at some point been told (or somehow got it into my head), that C <code>union</code>s are generally dangerous and are something you should steer well clear of, so I'd never really known what they were about. However, from learning about the SSO it's clear they can make for some very efficient memory use as long as you are careful. (If you're familiar with <code>union</code>s this whole thing will probably be underwhelming!).</p>
+<p>I'll attempt an explanation here in my own words so I can make sure I understand the topic.</p>
+<h2>Deriving the SSO</h2>
+<h3>Baby Steps</h3>
+<p>Let's try and implement a C++ <code>string</code> class, and be as memory and processor efficient as we can. Assuming a 64-bit system, we'll need at least:</p>
+<ul>
+<li>A <code>char *string</code> pointer to the string - the string itself will have to be on the heap somewhere as it can be arbitrarily large,</li>
+<li>A <code>uint64_t length</code> - again allowing for arbitrary largeness.</li>
+</ul>
+<p>That's pretty good so far, only 16 bytes used and we can manage arbitrarily large strings.</p>
+<h3>Minimising Reallocation</h3>
+<p>Now imagine we're working with a string, and appending <code>char</code>s to it to build some bigger string, one-by-one. That means each time one is appended, we have to <code>realloc</code> our string, which may well mean a <code>malloc</code> of new memory, a <code>memcpy</code> of the whole string, and a <code>free</code> of the old string. That's far from ideal, so lets add one more field:</p>
+<ul>
+<li>A <code>uint64_t allocated_length</code> - this will separately store the size of any allocated memory, meaning we can, for example, double the amount of memory allocated when we run out, to achieve <a href="https://en.wikipedia.org/wiki/Dynamic_array#Geometric_expansion_and_amortized_cost">amortised constant time cost</a>.</li>
+</ul>
+<p>Cool, we're up to 24 bytes now and can handle large strings pretty optimally.</p>
+<h3>Wasn't This About Short Strings?</h3>
+<p>What about small strings though? If I create only a little string <code>Hello world!</code>, I have to allocate some memory on the heap to hold it. Going further, say I create an array of several two character strings, every single one has to separately allocate and later free memory. That's not great, so lets try and improve it.</p>
+<p>We could add a small array to our string class that we use for small strings - say something like:</p>
+<ul>
+<li>A <code>char short_string[16]</code> - any 16 byte or shorter string gets put in here.</li>
+</ul>
+<p>But then, every string class instance gets 16 bytes bigger, whether it needs it or not, and the space is completely useless for long strings (unless we split them across this array and any allocated memory, but then the string's not contiguous in memory and that's going to make it useless to any number of standard functions that expect that).</p>
+<p>So let's not do that - but notice if we did, when the array was in use the <code>char *string</code> and <code>uint64_t allocated_length</code> would be useless, and they would be wasted instead...</p>
+<p>Here's where the <code>union</code> steps in - lets define our string class<sup id="fnref-1"><a class="footnote-ref" href="#fn-1">1</a></sup> as:</p>
+<div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">string</span>
+<span class="p">{</span>
+  <span class="kt">uint64_t</span> <span class="n">length</span><span class="p">;</span>  <span class="c1">// The real string length.</span>
+  <span class="k">union</span>  <span class="c1">// One of...</span>
+  <span class="p">{</span>
+    <span class="k">struct</span>  <span class="c1">// ...a string on the heap and the memory size if needed...</span>
+    <span class="p">{</span>
+      <span class="kt">char</span> <span class="o">*</span><span class="n">string</span><span class="p">;</span>
+      <span class="kt">uint64_t</span> <span class="n">allocated_length</span><span class="p">;</span>
+    <span class="p">}</span> <span class="n">long_string</span><span class="p">;</span>
+    <span class="kt">char</span> <span class="n">short_string</span><span class="p">[</span><span class="k">sizeof</span><span class="p">(</span><span class="n">long_string</span><span class="p">)];</span>  <span class="c1">// ...or a small array.</span>
+  <span class="p">};</span>
+<span class="p">};</span>
+</pre></div>
+
+
+<p>That's a common 8 byte length of the actual string, and then an either-or of:</p>
+<ul>
+<li>pointer-to-string and allocated length</li>
+<li><code>char</code> array of the same size as the above takes up - 16 bytes here.</li>
+</ul>
+<p>Now if our string is 16 characters or shorter, we can pack it directly into the memory of the string class itself, and if it's longer, we treat the union as a pointer and length and store the string there instead!</p>
+<h3>But Wait, There's More</h3>
+<p>In the case above that we're using the short string buffer, the largest length we need to store is going to be 15 (assuming the string is stored null-terminated), so the <code>uint64_t</code> is overkill. Let's try turning the whole thing into one big <code>union</code>, using only a single byte to store the length in the short case:</p>
+<div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">string</span>
+<span class="p">{</span>
+  <span class="k">union</span>
+  <span class="p">{</span>
+    <span class="k">struct</span>
+    <span class="p">{</span>
+      <span class="kt">uint64_t</span> <span class="n">length</span><span class="p">;</span>
+      <span class="kt">char</span> <span class="o">*</span><span class="n">string</span><span class="p">;</span>
+      <span class="kt">uint64_t</span> <span class="n">allocated_length</span><span class="p">;</span>
+    <span class="p">}</span> <span class="n">long_string</span><span class="p">;</span>
+    <span class="k">struct</span>
+    <span class="p">{</span>
+      <span class="kt">uint8_t</span> <span class="n">length</span><span class="p">;</span>
+      <span class="kt">char</span> <span class="n">buffer</span><span class="p">[</span><span class="k">sizeof</span><span class="p">(</span><span class="n">long_string</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">];</span>
+    <span class="p">}</span> <span class="n">short_string</span><span class="p">;</span>
+  <span class="p">};</span>
+<span class="p">};</span>
+</pre></div>
+
+
+<p>Great, now our short string can be 23 bytes long, but there's one problem - how do we know which type to treat the <code>union</code> as when using this class?</p>
+<p>To solve this, we can take advantage of the fact that in the short case we need only about 5 bits to store the length, and  <em>surely</em> no-one will mind if we limit them to a paltry <code>2^63</code><sup id="fnref-2"><a class="footnote-ref" href="#fn-2">2</a></sup> byte string, so lets steal the high bit<sup id="fnref-3"><a class="footnote-ref" href="#fn-3">3</a></sup> from the length to act as a flag for whether we're treating the union one way or the other.</p>
+<h3>Squeezing Out the Last Drops</h3>
+<p>There's one final thing we can tweak to do better. As it stands, swapping back and forth from a 23 byte to a 24 byte string means allocating a string and copying into it one way, and then copying back and freeing it the other. Instead once we allocate a string and set the bit flag, we can just never unset it - so when a string shrinks to 23 bytes or less, we just continue using the allocated space.</p>
+<p>And that's how we can use just 24 bytes of space to point to arbitrarily long strings <em>and</em> still store 23 byte strings without having to allocate any extra memory!</p>
+<div class="footnote">
+<hr>
+<ol>
+<li id="fn-1">
+<p>I'm not claiming that any real implementations look exactly like any of the ones in this post - but it gives an illustrative idea. <a href="https://github.com/elliotgoodrich/SSO-23">Here's a real implementation, with some good explanatory diagrams</a>.&#160;<a class="footnote-backref" href="#fnref-1" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+</li>
+<li id="fn-2">
+<p>Even modern 64 bit CPUs can't actually address the full 64 bit space - the current limit is about <a href="http://www.howtogeek.com/175443/what-is-the-maximum-amount-of-ram-you-could-theoretically-put-in-a-64-bit-computer/">46 bits</a> - so this isn't even a real limitation as it stands. (A limit that HP's search-engine-unagreeably-named "The Machine" is coming up against!)&#160;<a class="footnote-backref" href="#fnref-2" title="Jump back to footnote 2 in the text">&#8617;</a></p>
+</li>
+<li id="fn-3">
+<p>Yes, I'm ignoring endianness for the purposes of this post.&#160;<a class="footnote-backref" href="#fnref-3" title="Jump back to footnote 3 in the text">&#8617;</a></p>
+</li>
+</ol>
+</div>
+  </div>
+  <div class="tag-cloud">
+    <p>
+      <a href="http://olipratt.co.uk/tag/cpp.html">C++</a>
+      <a href="http://olipratt.co.uk/tag/optimisation.html">optimisation</a>
+      <a href="http://olipratt.co.uk/tag/performance.html">performance</a>
+    </p>
+  </div>
+
+
+
+
+</article>
+
+    <footer>
+<p>&copy; Oli Pratt </p>
+<p>    Powered by <a href="http://getpelican.com" target="_blank">Pelican</a> - <a href="https://github.com/alexandrevicenzi/flex" target="_blank">Flex</a> theme by <a href="http://alexandrevicenzi.com" target="_blank">Alexandre Vicenzi</a>
+</p>    </footer>
+  </main>
+
+
+
+
+
+<script type="application/ld+json">
+{
+  "@context" : "http://schema.org",
+  "@type" : "Blog",
+  "name": " Oli Pratt ",
+  "url" : "http://olipratt.co.uk",
+  "image": "/static/images/site_logo.png",
+  "description": "Oli Pratt's Thoughts and Writings"
+}
+</script>
+</body>
+</html>
