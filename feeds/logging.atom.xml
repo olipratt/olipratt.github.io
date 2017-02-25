@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Oli Pratt - Logging</title><link href="http://olipratt.co.uk/" rel="alternate"></link><link href="http://olipratt.co.uk/feeds/logging.atom.xml" rel="self"></link><id>http://olipratt.co.uk/</id><updated>2017-02-25T13:18:00+00:00</updated><entry><title>Python Microservice Logging</title><link href="http://olipratt.co.uk/python-microservice-logging.html" rel="alternate"></link><published>2017-02-25T13:18:00+00:00</published><updated>2017-02-25T13:18:00+00:00</updated><author><name>Oli Pratt</name></author><id>tag:olipratt.co.uk,2017-02-25:/python-microservice-logging.html</id><summary type="html">&lt;p&gt;After looking into &lt;a href="http://olipratt.co.uk/python-rest-api-with-swaggerui.html"&gt;microservices&lt;/a&gt; &lt;a href="http://olipratt.co.uk/python-rest-api-client-adhering-to-a-swagger-schema.html"&gt;recently&lt;/a&gt;, I was running multiple terminals and switching between them to look at logs as they are written to screen. This was a little awkward so I thought it was worth looking for the right way to log to a central location from multiple microservices. Ideally …&lt;/p&gt;</summary><content type="html">&lt;p&gt;After looking into &lt;a href="http://olipratt.co.uk/python-rest-api-with-swaggerui.html"&gt;microservices&lt;/a&gt; &lt;a href="http://olipratt.co.uk/python-rest-api-client-adhering-to-a-swagger-schema.html"&gt;recently&lt;/a&gt;, I was running multiple terminals and switching between them to look at logs as they are written to screen. This was a little awkward so I thought it was worth looking for the right way to log to a central location from multiple microservices. Ideally I wanted do this just using the Python logging library, and without adding more dependencies to every service.&lt;/p&gt;
+&lt;p&gt;This meant a lot of reading around to reach a rather boring and obvious solution. I documented my whistle-stop tour around the world of logging, but jump to the end to just see the &lt;a href="#solution"&gt;solution&lt;/a&gt; I went with.&lt;/p&gt;
+&lt;h2&gt;Picking a format&lt;/h2&gt;
+&lt;h4&gt;Open Standards&lt;/h4&gt;
+&lt;p&gt;Straight off - there's no obvious standardised server package for receiving logs over the network from the Python logging module. I initially thought this whole thing would just take a 5 minute search - maybe this should have been a clue.&lt;/p&gt;
+&lt;p&gt;So I started looking around for other open logging formats and log stores. Turns out there's quite a few of these.  &lt;a href="http://docs.graylog.org/en/2.2/pages/gelf.html"&gt;GELF&lt;/a&gt; seemed like maybe a good option. It's open, JSON structured format, integrates with many log stores, and has a &lt;a href="https://github.com/severb/graypy"&gt;Python logging module handler&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;a href="http://docs.graylog.org/en/2.2/pages/installation.html"&gt;The GELF server&lt;/a&gt; is pretty massive though - delivered as a whole VM, ideally I just wanted a simple listener script I could run. I did find a &lt;a href="http://idlethreat.com/blog/graylog/gelf-listener-in-python/"&gt;single simple server implementation&lt;/a&gt;, but that was it. I got it all running easily enough, and though I could have tidied it up and used it, I felt I was off the beaten path and had added a new dependency to every service for logging so kept digging for a bit.&lt;/p&gt;
+&lt;h4&gt;Too Cumbersome - Back to Simple HTTP&lt;/h4&gt;
+&lt;p&gt;Going back to the logging module, it looked like basic &lt;a href="https://docs.python.org/3/library/logging.handlers.html#httphandler"&gt;HTTPHandler&lt;/a&gt; would do, and meant no dependencies. However, I found &lt;a href="http://ericshtiv.blogspot.co.uk/2012/12/python-fast-http-logging-handler.html"&gt;warnings that it was slow&lt;/a&gt;, but then a &lt;a href="http://plumberjack.blogspot.co.uk/2010/09/improved-queuehandler-queuelistener.html"&gt;solution&lt;/a&gt; to that using the logging module's &lt;a href="https://docs.python.org/3.6/library/logging.handlers.html#queuehandler"&gt;queuehandler&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;I got that working, but the POST body from the HTTPHandler was not JSON but just a &lt;a href="http://stackoverflow.com/a/14551320"&gt;URL encoded string&lt;/a&gt;. I could easily decode this in a Flask server, but then it was still a lot of code to copy paste and I might as well just shove in a JSON body instead. So I reworked that into a REST log handler - which I still have lying around:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;configure_remote_logging&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;url&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;client_name&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;level&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;logging&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;INFO&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="sd"&gt;&amp;quot;&amp;quot;&amp;quot;Set up remote logging to the specified url.&lt;/span&gt;
+
+&lt;span class="sd"&gt;    This sets up a queue which logs are placed onto, and then they are sent on&lt;/span&gt;
+&lt;span class="sd"&gt;    a background thread so they don&amp;#39;t slow down the code making the logs.&lt;/span&gt;
+&lt;span class="sd"&gt;    &amp;quot;&amp;quot;&amp;quot;&lt;/span&gt;
+    &lt;span class="c1"&gt;# The handler which will send logs remotely - definition and an instance.&lt;/span&gt;
+    &lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;RESTHandler&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;logging&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Handler&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+        &lt;span class="sd"&gt;&amp;quot;&amp;quot;&amp;quot;Handler which sends logs to a REST log server.&amp;quot;&amp;quot;&amp;quot;&lt;/span&gt;
+
+        &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="fm"&gt;__init__&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;url&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;client_name&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+            &lt;span class="nb"&gt;super&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;RESTHandler&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="fm"&gt;__init__&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+            &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;url&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;url&lt;/span&gt;
+            &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;client_name&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;client_name&lt;/span&gt;
+
+        &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;format&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;log_record&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+            &lt;span class="n"&gt;formatted&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;log_record&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="vm"&gt;__dict__&lt;/span&gt;
+            &lt;span class="n"&gt;formatted&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;processName&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;client_name&lt;/span&gt;
+            &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;formatted&lt;/span&gt;
+
+        &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;emit&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;log_record&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+            &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;requests&lt;/span&gt;
+            &lt;span class="n"&gt;requests&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;post&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;url&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;json&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;format&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;log_record&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+
+    &lt;span class="n"&gt;rest_handler&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;RESTHandler&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;url&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;client_name&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="n"&gt;rest_handler&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;setLevel&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;level&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+    &lt;span class="c1"&gt;# Create queue handlers so that logs are processed in a background thread.&lt;/span&gt;
+    &lt;span class="c1"&gt;# Set up an unbounded size queue and assume logs are processed faster than&lt;/span&gt;
+    &lt;span class="c1"&gt;# they are made.&lt;/span&gt;
+    &lt;span class="n"&gt;logging_queue&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;queue&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Queue&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+    &lt;span class="n"&gt;queue_handler&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;logging&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;handlers&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;QueueHandler&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;logging_queue&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="n"&gt;queue_listener&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;logging&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;handlers&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;QueueListener&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;logging_queue&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+                                                    &lt;span class="n"&gt;rest_handler&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+    &lt;span class="c1"&gt;# Add the remote logging handler and start the background queue running.&lt;/span&gt;
+    &lt;span class="n"&gt;root&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;logging&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;getLogger&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+    &lt;span class="n"&gt;root&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;addHandler&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;queue_handler&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="n"&gt;queue_listener&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;start&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+
+    &lt;span class="c1"&gt;# Should call this on exit to ensure all final logs are flushed.&lt;/span&gt;
+    &lt;span class="c1"&gt;# queue_listener.stop()&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Then receiving the log is simple on the Flask server side - just:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;LogsCollection&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Resource&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;post&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+        &lt;span class="sd"&gt;&amp;quot;&amp;quot;&amp;quot;Receives a log.&amp;quot;&amp;quot;&amp;quot;&lt;/span&gt;
+        &lt;span class="n"&gt;log&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;handle&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;logging&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;makeLogRecord&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;request&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;get_json&lt;/span&gt;&lt;span class="p"&gt;()))&lt;/span&gt;
+        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="bp"&gt;None&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;201&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;But now:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;I should really be calling the commented out &lt;code&gt;stop&lt;/code&gt; method on the queue when the app exits, otherwise logs can end up not being flushed - which means some kind of global state to store a reference to that queue and a hook to call it.&lt;/li&gt;
+&lt;li&gt;The overhead of a HTTP POST for every log seems high - especially at the debug level.&lt;/li&gt;
+&lt;li&gt;I've still got a huge block of code to copy/paste into every service, or otherwise write a package and add another dependency.&lt;/li&gt;
+&lt;li&gt;I've added a dependency on &lt;code&gt;requests&lt;/code&gt; in there.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Sigh.&lt;/p&gt;
+&lt;h4&gt;No, No - Let's Use a Standard&lt;/h4&gt;
+&lt;p&gt;Clearly that's the wrong approach - throw it away and start over. Really we should be going with a standard so we can integrate with other things, and that ended up with me looking into syslog since&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;it seemed frequently &lt;a href="http://www.structlog.org/en/stable/logging-best-practices.html#syslog-again"&gt;recommended&lt;/a&gt;,&lt;/li&gt;
+&lt;li&gt;well used and supported by every client/server,&lt;/li&gt;
+&lt;li&gt;has a built in &lt;a href="https://docs.python.org/3/library/logging.handlers.html#sysloghandler"&gt;Python logging handler&lt;/a&gt;,&lt;/li&gt;
+&lt;li&gt;I &lt;a href="https://gist.github.com/marcelom/4218010"&gt;found a tiny Python listener for it&lt;/a&gt;,&lt;/li&gt;
+&lt;li&gt;and &lt;a href="https://tools.ietf.org/html/rfc5424"&gt;it's so standardised it has an RFC&lt;/a&gt;!&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;This &lt;em&gt;had&lt;/em&gt; to be the right answer, so I wrote some client code for that:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;configure_logging&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;client_name&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;host&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="bp"&gt;None&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;level&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;logging&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;INFO&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="sd"&gt;&amp;quot;&amp;quot;&amp;quot;Set up logging to stderr and optionally a remote syslog server.&amp;quot;&amp;quot;&amp;quot;&lt;/span&gt;
+    &lt;span class="n"&gt;handlers&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[]&lt;/span&gt;
+
+    &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;host&lt;/span&gt; &lt;span class="ow"&gt;is&lt;/span&gt; &lt;span class="ow"&gt;not&lt;/span&gt; &lt;span class="bp"&gt;None&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+        &lt;span class="n"&gt;syslog_fmt&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;1 &lt;/span&gt;&lt;span class="si"&gt;%(asctime)s&lt;/span&gt;&lt;span class="s1"&gt;.&lt;/span&gt;&lt;span class="si"&gt;%(msecs)03d&lt;/span&gt;&lt;span class="s1"&gt;Z {} {} - - - &amp;#39;&lt;/span&gt;
+                      &lt;span class="s1"&gt;&amp;#39;&lt;/span&gt;&lt;span class="si"&gt;%(message)s&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;format&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;socket&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;getfqdn&lt;/span&gt;&lt;span class="p"&gt;(),&lt;/span&gt; &lt;span class="n"&gt;client_name&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+        &lt;span class="n"&gt;syslog_date&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;%Y-%m-&lt;/span&gt;&lt;span class="si"&gt;%d&lt;/span&gt;&lt;span class="s1"&gt;T%H:%M:%S&amp;#39;&lt;/span&gt;
+        &lt;span class="n"&gt;syslog_formatter&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;logging&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Formatter&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;syslog_fmt&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;datefmt&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;syslog_date&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+        &lt;span class="c1"&gt;# Force UTC time so we can just stick `Z` at the end of the timestamp.&lt;/span&gt;
+        &lt;span class="n"&gt;syslog_formatter&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;converter&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;time&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;gmtime&lt;/span&gt;
+
+        &lt;span class="n"&gt;syslog_handler&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;logging&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;handlers&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;SysLogHandler&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;address&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;host&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;514&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+        &lt;span class="n"&gt;syslog_handler&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;setFormatter&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;syslog_formatter&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+        &lt;span class="n"&gt;handlers&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;append&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;syslog_handler&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+    &lt;span class="n"&gt;stderr_fmt&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;&lt;/span&gt;&lt;span class="si"&gt;%(asctime)-23s&lt;/span&gt;&lt;span class="s1"&gt;:&lt;/span&gt;&lt;span class="si"&gt;%(levelname)-8s&lt;/span&gt;&lt;span class="s1"&gt;:&lt;/span&gt;&lt;span class="si"&gt;%(message)s&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;&lt;/span&gt;
+    &lt;span class="n"&gt;stderr_formatter&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;logging&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Formatter&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;stderr_fmt&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="n"&gt;stderr_handler&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;logging&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;StreamHandler&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+    &lt;span class="n"&gt;stderr_handler&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;setFormatter&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;stderr_formatter&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="n"&gt;handlers&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;append&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;stderr_handler&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+    &lt;span class="n"&gt;root&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;logging&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;getLogger&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+    &lt;span class="n"&gt;root&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;setLevel&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;level&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;handler&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;handlers&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+        &lt;span class="n"&gt;root&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;addHandler&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;handler&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;em&gt;Aside: I had to build the formatter to match the RFC standard syslog format because I couldn't easily find one elsewhere - might come in handy.&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;So this now works fine, it's a reasonable chunk of code, but it's mostly just boilerplate stuff setting up the built in logging module, and the only custom part is setting up the right formatter. All done?&lt;/p&gt;
+&lt;h2&gt;&lt;a name="solution"&gt;&lt;/a&gt;Real Solution&lt;/h2&gt;
+&lt;p&gt;So after all that, I think I'm done and move on to something else - containerising these apps was up next for me - ...and that's when I stumble across the &lt;em&gt;right&lt;/em&gt; answer. It's right &lt;a href="https://12factor.net/logs"&gt;here&lt;/a&gt; in these &lt;a href="https://12factor.net/"&gt;guidelines to writing services&lt;/a&gt;:&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;&lt;em&gt;Just write your logs to stdout.&lt;/em&gt;&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;That's it! Then whatever is running your app pipes them out and handles them appropriately. Anything else you do is just another system someone has to worry about integrating into their setup. &lt;a href="https://docs.docker.com/engine/reference/commandline/logs/#/extended-description"&gt;Docker by default assumes an app will send logs to stdout&lt;/a&gt; and handles them as configured. I saw this in action when I started using Docker - I'll write that up soon.&lt;/p&gt;
+&lt;p&gt;So that was an interesting bit of investigation, and I learnt some stuff, but damn if it doesn't feel like a waste of time.&lt;/p&gt;
+&lt;p&gt;How do you handle logging from your Python apps?&lt;/p&gt;</content><category term="Python"></category><category term="logging"></category><category term="syslog"></category></entry></feed>
