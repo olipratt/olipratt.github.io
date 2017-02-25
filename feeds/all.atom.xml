@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom"><title>Oli Pratt</title><link href="http://olipratt.co.uk/" rel="alternate"></link><link href="http://olipratt.co.uk/feeds/all.atom.xml" rel="self"></link><id>http://olipratt.co.uk/</id><updated>2017-02-25T20:45:00+00:00</updated><entry><title>Python Microservice Logging</title><link href="http://olipratt.co.uk/python-microservice-logging.html" rel="alternate"></link><published>2017-02-25T14:39:00+00:00</published><updated>2017-02-25T14:39:00+00:00</updated><author><name>Oli Pratt</name></author><id>tag:olipratt.co.uk,2017-02-25:/python-microservice-logging.html</id><summary type="html">&lt;p&gt;After looking into &lt;a href="http://olipratt.co.uk/python-rest-api-with-swaggerui.html"&gt;microservices&lt;/a&gt; &lt;a href="http://olipratt.co.uk/python-rest-api-client-adhering-to-a-swagger-schema.html"&gt;recently&lt;/a&gt;, I was running multiple terminals and switching between them to look at logs as they are written to screen. This was a little awkward so I thought it was worth looking for the right way to log to a central location from multiple microservices. Ideally …&lt;/p&gt;</summary><content type="html">&lt;p&gt;After looking into &lt;a href="http://olipratt.co.uk/python-rest-api-with-swaggerui.html"&gt;microservices&lt;/a&gt; &lt;a href="http://olipratt.co.uk/python-rest-api-client-adhering-to-a-swagger-schema.html"&gt;recently&lt;/a&gt;, I was running multiple terminals and switching between them to look at logs as they are written to screen. This was a little awkward so I thought it was worth looking for the right way to log to a central location from multiple microservices. Ideally I wanted do this just using the Python logging library, and without adding more dependencies to every service.&lt;/p&gt;
-&lt;p&gt;This meant a lot of reading around to reach a rather boring and obvious solution. I documented my whistle-stop tour around the world of logging, but jump to the end to just see the &lt;a href="#solution"&gt;solution&lt;/a&gt; I went with.&lt;/p&gt;
-&lt;h2&gt;Picking a format&lt;/h2&gt;
-&lt;h4&gt;Open Standards&lt;/h4&gt;
+&lt;p&gt;This meant a lot of reading around to reach a rather boring and obvious solution. I documented my whistle-stop tour around the world of logging, but jump to the end to just see the &lt;a href="#real-solution"&gt;solution&lt;/a&gt; I went with.&lt;/p&gt;
+&lt;h2 id="picking-a-format"&gt;Picking a format&lt;/h2&gt;
+&lt;h4 id="open-standards"&gt;Open Standards&lt;/h4&gt;
 &lt;p&gt;Straight off - there's no obvious standardised server package for receiving logs over the network from the Python logging module. I initially thought this whole thing would just take a 5 minute search - maybe this should have been a clue.&lt;/p&gt;
 &lt;p&gt;So I started looking around for other open logging formats and log stores. Turns out there's quite a few of these.  &lt;a href="http://docs.graylog.org/en/2.2/pages/gelf.html"&gt;GELF&lt;/a&gt; seemed like maybe a good option. It's open, JSON structured format, integrates with many log stores, and has a &lt;a href="https://github.com/severb/graypy"&gt;Python logging module handler&lt;/a&gt;.&lt;/p&gt;
 &lt;p&gt;&lt;a href="http://docs.graylog.org/en/2.2/pages/installation.html"&gt;The GELF server&lt;/a&gt; is pretty massive though - delivered as a whole VM, ideally I just wanted a simple listener script I could run. I did find a &lt;a href="http://idlethreat.com/blog/graylog/gelf-listener-in-python/"&gt;single simple server implementation&lt;/a&gt;, but that was it. I got it all running easily enough, and though I could have tidied it up and used it, I felt I was off the beaten path and had added a new dependency to every service for logging so kept digging for a bit.&lt;/p&gt;
-&lt;h4&gt;Too Cumbersome - Back to Simple HTTP&lt;/h4&gt;
+&lt;h4 id="too-cumbersome-back-to-simple-http"&gt;Too Cumbersome - Back to Simple HTTP&lt;/h4&gt;
 &lt;p&gt;Going back to the logging module, it looked like basic &lt;a href="https://docs.python.org/3/library/logging.handlers.html#httphandler"&gt;HTTPHandler&lt;/a&gt; would do, and meant no dependencies. However, I found &lt;a href="http://ericshtiv.blogspot.co.uk/2012/12/python-fast-http-logging-handler.html"&gt;warnings that it was slow&lt;/a&gt;, but then a &lt;a href="http://plumberjack.blogspot.co.uk/2010/09/improved-queuehandler-queuelistener.html"&gt;solution&lt;/a&gt; to that using the logging module's &lt;a href="https://docs.python.org/3.6/library/logging.handlers.html#queuehandler"&gt;queuehandler&lt;/a&gt;.&lt;/p&gt;
 &lt;p&gt;I got that working, but the POST body from the HTTPHandler was not JSON but just a &lt;a href="http://stackoverflow.com/a/14551320"&gt;URL encoded string&lt;/a&gt;. I could easily decode this in a Flask server, but then it was still a lot of code to copy paste and I might as well just shove in a JSON body instead. So I reworked that into a REST log handler - which I still have lying around:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;configure_remote_logging&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;url&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;client_name&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;level&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;logging&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;INFO&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
@@ -71,7 +71,7 @@
 &lt;li&gt;I've added a dependency on &lt;code&gt;requests&lt;/code&gt; in there.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;Sigh.&lt;/p&gt;
-&lt;h4&gt;No, No - Let's Use a Standard&lt;/h4&gt;
+&lt;h4 id="no-no-lets-use-a-standard"&gt;No, No - Let's Use a Standard&lt;/h4&gt;
 &lt;p&gt;Clearly that's the wrong approach - throw it away and start over. Really we should be going with a standard so we can integrate with other things, and that ended up with me looking into syslog since&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;it seemed frequently &lt;a href="http://www.structlog.org/en/stable/logging-best-practices.html#syslog-again"&gt;recommended&lt;/a&gt;,&lt;/li&gt;
@@ -112,20 +112,20 @@
 
 &lt;p&gt;&lt;em&gt;Aside: I had to build the formatter to match the RFC standard syslog format because I couldn't easily find one elsewhere - might come in handy.&lt;/em&gt;&lt;/p&gt;
 &lt;p&gt;So this now works fine, it's a reasonable chunk of code, but it's mostly just boilerplate stuff setting up the built in logging module, and the only custom part is setting up the right formatter. All done?&lt;/p&gt;
-&lt;h2&gt;&lt;a name="solution"&gt;&lt;/a&gt;Real Solution&lt;/h2&gt;
+&lt;h2 id="real-solution"&gt;Real Solution&lt;/h2&gt;
 &lt;p&gt;So after all that, I think I'm done and move on to something else - containerising these apps was up next for me - ...and that's when I stumble across the &lt;em&gt;right&lt;/em&gt; answer. It's right &lt;a href="https://12factor.net/logs"&gt;here&lt;/a&gt; in these &lt;a href="https://12factor.net/"&gt;guidelines to writing services&lt;/a&gt;:&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;&lt;em&gt;Just write your logs to stdout.&lt;/em&gt;&lt;/strong&gt;&lt;/p&gt;
 &lt;p&gt;That's it! Then whatever is running your app pipes them out and handles them appropriately. Anything else you do is just another system someone has to worry about integrating into their setup. &lt;a href="https://docs.docker.com/engine/reference/commandline/logs/#/extended-description"&gt;Docker by default assumes an app will send logs to stdout&lt;/a&gt; and handles them as configured. I saw this in action when I started using Docker - I'll write that up soon.&lt;/p&gt;
 &lt;p&gt;So that was an interesting bit of investigation, and I learnt some stuff, but damn if it doesn't feel like a waste of time.&lt;/p&gt;
 &lt;p&gt;How do you handle logging from your Python apps?&lt;/p&gt;</content><category term="Python"></category><category term="logging"></category><category term="syslog"></category></entry><entry><title>REST APIs Notes and References</title><link href="http://olipratt.co.uk/rest-apis-notes-and-references.html" rel="alternate"></link><published>2017-02-12T17:37:00+00:00</published><updated>2017-02-25T20:45:00+00:00</updated><author><name>Oli Pratt</name></author><id>tag:olipratt.co.uk,2017-02-12:/rest-apis-notes-and-references.html</id><summary type="html">&lt;p&gt;After working to create a &lt;a href="http://olipratt.co.uk/python-rest-api-with-swaggerui.html"&gt;REST API&lt;/a&gt; and &lt;a href="http://olipratt.co.uk/python-rest-api-client-adhering-to-a-swagger-schema.html"&gt;client&lt;/a&gt; recently, here are some notes and resources I found useful. I'll keep adding to this as I find new info.&lt;/p&gt;
-&lt;h4&gt;General notes&lt;/h4&gt;
+&lt;h4 id="general-notes"&gt;General notes&lt;/h4&gt;
 &lt;ul&gt;
 &lt;li&gt;
 &lt;p&gt;Resource collection names should always be plural.&lt;/p&gt;
 &lt;/li&gt;
 &lt;li&gt;
 &lt;p&gt;Depending on who (client vs server) names resources, creation switches between &lt;code&gt;PUT …&lt;/code&gt;&lt;/p&gt;&lt;/li&gt;&lt;/ul&gt;</summary><content type="html">&lt;p&gt;After working to create a &lt;a href="http://olipratt.co.uk/python-rest-api-with-swaggerui.html"&gt;REST API&lt;/a&gt; and &lt;a href="http://olipratt.co.uk/python-rest-api-client-adhering-to-a-swagger-schema.html"&gt;client&lt;/a&gt; recently, here are some notes and resources I found useful. I'll keep adding to this as I find new info.&lt;/p&gt;
-&lt;h4&gt;General notes&lt;/h4&gt;
+&lt;h4 id="general-notes"&gt;General notes&lt;/h4&gt;
 &lt;ul&gt;
 &lt;li&gt;
 &lt;p&gt;Resource collection names should always be plural.&lt;/p&gt;
@@ -144,7 +144,7 @@
 &lt;/ul&gt;
 &lt;/li&gt;
 &lt;/ul&gt;
-&lt;h4&gt;Some useful references&lt;/h4&gt;
+&lt;h4 id="some-useful-references"&gt;Some useful references&lt;/h4&gt;
 &lt;ul&gt;
 &lt;li&gt;
 &lt;p&gt;&lt;a href="http://www.vinaysahni.com/best-practices-for-a-pragmatic-restful-api"&gt;General REST API best practices&lt;/a&gt;&lt;/p&gt;
@@ -173,12 +173,12 @@
 &lt;p&gt;Have you got any other good general rules, notes, or references to add?&lt;/p&gt;</content><category term="REST"></category></entry><entry><title>Python REST API Client Adhering to a Swagger Schema</title><link href="http://olipratt.co.uk/python-rest-api-client-adhering-to-a-swagger-schema.html" rel="alternate"></link><published>2017-02-11T19:13:00+00:00</published><updated>2017-02-11T19:13:00+00:00</updated><author><name>Oli Pratt</name></author><id>tag:olipratt.co.uk,2017-02-11:/python-rest-api-client-adhering-to-a-swagger-schema.html</id><summary type="html">&lt;p&gt;After &lt;a href="http://olipratt.co.uk/python-rest-api-with-swaggerui.html"&gt;building a REST API&lt;/a&gt; I left it alone for a while before coming back to try and get a client working properly.&lt;/p&gt;
 &lt;p&gt;Similar goals here to back then - find a good library to use going forwards that does the heavy lifting and make a simple example project. I chose …&lt;/p&gt;</summary><content type="html">&lt;p&gt;After &lt;a href="http://olipratt.co.uk/python-rest-api-with-swaggerui.html"&gt;building a REST API&lt;/a&gt; I left it alone for a while before coming back to try and get a client working properly.&lt;/p&gt;
 &lt;p&gt;Similar goals here to back then - find a good library to use going forwards that does the heavy lifting and make a simple example project. I chose a simple microservice that provides an API for decks of playing cards - like a casino dealer type of thing - which would be a client of the datastore I created in the link above.&lt;/p&gt;
-&lt;h2&gt;Choosing a Client Package&lt;/h2&gt;
+&lt;h2 id="choosing-a-client-package"&gt;Choosing a Client Package&lt;/h2&gt;
 &lt;p&gt;The standard seems to be to &lt;a href="https://github.com/swagger-api/swagger-codegen"&gt;generate code&lt;/a&gt; to meet a schema, but I'd rather load it dynamically into an app if possible.&lt;/p&gt;
 &lt;p&gt;After a bit of looking I found &lt;a href="http://bravado.readthedocs.io/en/latest/"&gt;Bravado&lt;/a&gt; which looked promising. However, it was a pain to install - it relies on the twisted package and that doesn't seem to install on Windows through pip successfully, so after some failed attempts to get it to work I gave up. I figure it's not worth using if it's going to be a pain for others to install - shame :(.&lt;/p&gt;
 &lt;p&gt;Next up was &lt;a href="http://pyswagger.readthedocs.io/en/latest/"&gt;pyswagger&lt;/a&gt; - it seems to provide all the functionality and be well maintained (commits in the past few days when I wrote this). The API doesn't look as polished to me when compared to &lt;code&gt;bravado&lt;/code&gt; above, but it worked fine in practice.&lt;/p&gt;
 &lt;p&gt;On the testing point - &lt;code&gt;pyswagger&lt;/code&gt; uses  &lt;code&gt;requests&lt;/code&gt; for HTTP requests, so we can easily test using the &lt;a href="https://github.com/getsentry/responses"&gt;responses&lt;/a&gt; library to provide mock responses to them.&lt;/p&gt;
-&lt;h2&gt;The First Test&lt;/h2&gt;
+&lt;h2 id="the-first-test"&gt;The First Test&lt;/h2&gt;
 &lt;p&gt;This was painful to get working, but as always trivial to fix in the end.&lt;/p&gt;
 &lt;p&gt;I needed to load in the schema, and then intercept the requests over the network for each API call. Intercepting the API calls was trivial with &lt;code&gt;responses&lt;/code&gt;, but loading in the schema turned out to be less so.&lt;/p&gt;
 &lt;p&gt;There were two approaches I could see:&lt;/p&gt;
@@ -205,29 +205,29 @@
 
 &lt;p&gt;With that, &lt;code&gt;pyswagger&lt;/code&gt; can load schema from file for tests, and then send API requests over HTTP to that address, and we can use &lt;code&gt;responses&lt;/code&gt; to catch those and respond to them.&lt;/p&gt;
 &lt;p&gt;Phew!&lt;/p&gt;
-&lt;h2&gt;Overall&lt;/h2&gt;
+&lt;h2 id="overall"&gt;Overall&lt;/h2&gt;
 &lt;p&gt;Once I had wasted far too long trying to get a test working, everything else was straightforward, basically just following the &lt;a href="https://github.com/mission-liao/pyswagger#tutorial"&gt;tutorials linked in the &lt;code&gt;pyswagger&lt;/code&gt; readme&lt;/a&gt;.&lt;/p&gt;
 &lt;p&gt;When you have loaded in the schema to &lt;code&gt;pyswagger&lt;/code&gt;, you just reference API calls by name in the schema, which &lt;code&gt;Flask-RESTPlus&lt;/code&gt; auto-generates from the class names you give to resources, and you can rename if you want - details of both of those bits of logic &lt;a href="https://flask-restplus.readthedocs.io/en/stable/swagger.html#documenting-the-methods"&gt;here&lt;/a&gt;. &lt;code&gt;pyswagger&lt;/code&gt; makes sure you pass in all the right arguments in the right format, so if you have models in the schema you pretty much have to use the API correctly or any attempts will be rejected, which is great for catching bugs early.&lt;/p&gt;
-&lt;h2&gt;Result&lt;/h2&gt;
+&lt;h2 id="result"&gt;Result&lt;/h2&gt;
 &lt;p&gt;Here's the project - &lt;a href="https://github.com/olipratt/microcarddeck"&gt;microcarddeck&lt;/a&gt;. I didn't end up implementing much function because I didn't need to - I got to exercise the &lt;code&gt;pyswagger&lt;/code&gt; package and get a feel for how to use it, and got a good simple bit of reference code to crib from in the future.&lt;/p&gt;</content><category term="Python"></category><category term="REST"></category><category term="Swagger"></category><category term="pyswagger"></category></entry><entry><title>The C++ Short String Optimisation</title><link href="http://olipratt.co.uk/the-cpp-short-string-optimisation.html" rel="alternate"></link><published>2016-11-19T12:28:00+00:00</published><updated>2016-11-19T12:28:00+00:00</updated><author><name>Oli Pratt</name></author><id>tag:olipratt.co.uk,2016-11-19:/the-cpp-short-string-optimisation.html</id><summary type="html">&lt;p&gt;While learning and reading up on C++11 recently, I came across the Short String Optimisation.&lt;/p&gt;
 &lt;p&gt;I'd at some point been told (or somehow got it into my head), that C &lt;code&gt;union&lt;/code&gt;s are generally dangerous and are something you should steer well clear of, so I'd never really known …&lt;/p&gt;</summary><content type="html">&lt;p&gt;While learning and reading up on C++11 recently, I came across the Short String Optimisation.&lt;/p&gt;
 &lt;p&gt;I'd at some point been told (or somehow got it into my head), that C &lt;code&gt;union&lt;/code&gt;s are generally dangerous and are something you should steer well clear of, so I'd never really known what they were about. However, from learning about the SSO it's clear they can make for some very efficient memory use as long as you are careful. (If you're familiar with &lt;code&gt;union&lt;/code&gt;s this whole thing will probably be underwhelming!).&lt;/p&gt;
 &lt;p&gt;I'll attempt an explanation here in my own words so I can make sure I understand the topic.&lt;/p&gt;
-&lt;h2&gt;Deriving the SSO&lt;/h2&gt;
-&lt;h3&gt;Baby Steps&lt;/h3&gt;
+&lt;h2 id="deriving-the-sso"&gt;Deriving the SSO&lt;/h2&gt;
+&lt;h3 id="baby-steps"&gt;Baby Steps&lt;/h3&gt;
 &lt;p&gt;Let's try and implement a C++ &lt;code&gt;string&lt;/code&gt; class, and be as memory and processor efficient as we can. Assuming a 64-bit system, we'll need at least:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;A &lt;code&gt;char *string&lt;/code&gt; pointer to the string - the string itself will have to be on the heap somewhere as it can be arbitrarily large,&lt;/li&gt;
 &lt;li&gt;A &lt;code&gt;uint64_t length&lt;/code&gt; - again allowing for arbitrary largeness.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;That's pretty good so far, only 16 bytes used and we can manage arbitrarily large strings.&lt;/p&gt;
-&lt;h3&gt;Minimising Reallocation&lt;/h3&gt;
+&lt;h3 id="minimising-reallocation"&gt;Minimising Reallocation&lt;/h3&gt;
 &lt;p&gt;Now imagine we're working with a string, and appending &lt;code&gt;char&lt;/code&gt;s to it to build some bigger string, one-by-one. That means each time one is appended, we have to &lt;code&gt;realloc&lt;/code&gt; our string, which may well mean a &lt;code&gt;malloc&lt;/code&gt; of new memory, a &lt;code&gt;memcpy&lt;/code&gt; of the whole string, and a &lt;code&gt;free&lt;/code&gt; of the old string. That's far from ideal, so lets add one more field:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;A &lt;code&gt;uint64_t allocated_length&lt;/code&gt; - this will separately store the size of any allocated memory, meaning we can, for example, double the amount of memory allocated when we run out, to achieve &lt;a href="https://en.wikipedia.org/wiki/Dynamic_array#Geometric_expansion_and_amortized_cost"&gt;amortised constant time cost&lt;/a&gt;.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;Cool, we're up to 24 bytes now and can handle large strings pretty optimally.&lt;/p&gt;
-&lt;h3&gt;Wasn't This About Short Strings?&lt;/h3&gt;
+&lt;h3 id="wasnt-this-about-short-strings"&gt;Wasn't This About Short Strings?&lt;/h3&gt;
 &lt;p&gt;What about small strings though? If I create only a little string &lt;code&gt;Hello world!&lt;/code&gt;, I have to allocate some memory on the heap to hold it. Going further, say I create an array of several two character strings, every single one has to separately allocate and later free memory. That's not great, so lets try and improve it.&lt;/p&gt;
 &lt;p&gt;We could add a small array to our string class that we use for small strings - say something like:&lt;/p&gt;
 &lt;ul&gt;
@@ -258,7 +258,7 @@
 &lt;li&gt;&lt;code&gt;char&lt;/code&gt; array of the same size as the above takes up - 16 bytes here.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;Now if our string is 16 characters or shorter, we can pack it directly into the memory of the string class itself, and if it's longer, we treat the union as a pointer and length and store the string there instead!&lt;/p&gt;
-&lt;h3&gt;But Wait, There's More&lt;/h3&gt;
+&lt;h3 id="but-wait-theres-more"&gt;But Wait, There's More&lt;/h3&gt;
 &lt;p&gt;In the case above that we're using the short string buffer, the largest length we need to store is going to be 15 (assuming the string is stored null-terminated), so the &lt;code&gt;uint64_t&lt;/code&gt; is overkill. Let's try turning the whole thing into one big &lt;code&gt;union&lt;/code&gt;, using only a single byte to store the length in the short case:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;string&lt;/span&gt;
 &lt;span class="p"&gt;{&lt;/span&gt;
@@ -282,7 +282,7 @@
 
 &lt;p&gt;Great, now our short string can be 23 bytes long, but there's one problem - how do we know which type to treat the &lt;code&gt;union&lt;/code&gt; as when using this class?&lt;/p&gt;
 &lt;p&gt;To solve this, we can take advantage of the fact that in the short case we need only about 5 bits to store the length, and  &lt;em&gt;surely&lt;/em&gt; no-one will mind if we limit them to a paltry &lt;code&gt;2^63&lt;/code&gt;&lt;sup id="fnref-2"&gt;&lt;a class="footnote-ref" href="#fn-2"&gt;2&lt;/a&gt;&lt;/sup&gt; byte string, so lets steal the high bit&lt;sup id="fnref-3"&gt;&lt;a class="footnote-ref" href="#fn-3"&gt;3&lt;/a&gt;&lt;/sup&gt; from the length to act as a flag for whether we're treating the union one way or the other.&lt;/p&gt;
-&lt;h3&gt;Squeezing Out the Last Drops&lt;/h3&gt;
+&lt;h3 id="squeezing-out-the-last-drops"&gt;Squeezing Out the Last Drops&lt;/h3&gt;
 &lt;p&gt;There's one final thing we can tweak to do better. As it stands, swapping back and forth from a 23 byte to a 24 byte string means allocating a string and copying into it one way, and then copying back and freeing it the other. Instead once we allocate a string and set the bit flag, we can just never unset it - so when a string shrinks to 23 bytes or less, we just continue using the allocated space.&lt;/p&gt;
 &lt;p&gt;And that's how we can use just 24 bytes of space to point to arbitrarily long strings &lt;em&gt;and&lt;/em&gt; still store 23 byte strings without having to allocate any extra memory!&lt;/p&gt;
 &lt;div class="footnote"&gt;
@@ -300,17 +300,17 @@
 &lt;/ol&gt;
 &lt;/div&gt;</content><category term="C++"></category><category term="optimisation"></category><category term="performance"></category></entry><entry><title>Python REST API With SwaggerUI</title><link href="http://olipratt.co.uk/python-rest-api-with-swaggerui.html" rel="alternate"></link><published>2016-10-29T11:45:00+01:00</published><updated>2016-10-29T11:45:00+01:00</updated><author><name>Oli Pratt</name></author><id>tag:olipratt.co.uk,2016-10-29:/python-rest-api-with-swaggerui.html</id><summary type="html">&lt;p&gt;What with REST APIs and the &lt;a href="http://swagger.io/"&gt;swagger&lt;/a&gt; framework for documenting and integrating them being the in-thing lately, to start getting to grips with them I wanted to see how easy it would be to create a simple one in Python with minimal code from me. Turns out it was very …&lt;/p&gt;</summary><content type="html">&lt;p&gt;What with REST APIs and the &lt;a href="http://swagger.io/"&gt;swagger&lt;/a&gt; framework for documenting and integrating them being the in-thing lately, to start getting to grips with them I wanted to see how easy it would be to create a simple one in Python with minimal code from me. Turns out it was very simple.&lt;/p&gt;
 &lt;p&gt;As practice project I picked writing a really simple datastore.&lt;/p&gt;
-&lt;h2&gt;Choosing a Package&lt;/h2&gt;
+&lt;h2 id="choosing-a-package"&gt;Choosing a Package&lt;/h2&gt;
 &lt;p&gt;After looking around for something that provides a SwaggerUI (&lt;a href="http://petstore.swagger.io/"&gt;demo here&lt;/a&gt; to see what this looks like) and schema, I found &lt;a href="https://flask-restplus.readthedocs.io/en/stable/index.html"&gt;Flask-RESTPlus&lt;/a&gt; which does this &lt;a href="https://flask-restplus.readthedocs.io/en/stable/swagger.html#swagger-ui"&gt;really easily out of the box&lt;/a&gt;. It also builds on top of &lt;a href="http://flask.pocoo.org/"&gt;Flask&lt;/a&gt; which I've heard good things about and wanted to try for a while - having only used &lt;a href="http://cherrypy.org/"&gt;cherrypy&lt;/a&gt; before myself.&lt;/p&gt;
 &lt;p&gt;Another thing I wanted was to be able to easily test the API, and it seemed  &lt;code&gt;Flask&lt;/code&gt; is really &lt;a href="http://flask.pocoo.org/docs/0.11/testing/"&gt;easy to test&lt;/a&gt;, and so by extension so is &lt;code&gt;Flask-RESTPlus&lt;/code&gt; as it just plugs in on top. So this combo sounded like a good choice to get going.&lt;/p&gt;
 &lt;p&gt;I also needed some way to store the data and so looked for a really simple key-value store. A quick search gave &lt;a href="http://tinydb.readthedocs.io/en/latest/getting-started.html"&gt;TinyDB&lt;/a&gt; - small, easy to set up, and stores Python &lt;code&gt;dict&lt;/code&gt;s directly (&lt;a href="https://docs.python.org/3.5/library/json.html#json.loads"&gt;easily converted to&lt;/a&gt; from the JSON used in the API).&lt;/p&gt;
-&lt;h2&gt;Getting Started&lt;/h2&gt;
+&lt;h2 id="getting-started"&gt;Getting Started&lt;/h2&gt;
 &lt;p&gt;Getting something up and running was very straightforward - I followed the tutorial &lt;a href="http://michal.karzynski.pl/blog/2016/06/19/building-beautiful-restful-apis-using-flask-swagger-ui-flask-restplus/"&gt;here&lt;/a&gt; and wrote tests as I went.&lt;/p&gt;
 &lt;p&gt;That was followed by lots of tweaking/playing with the contents of the SwaggerUI page and working out how to create data models to enforce on the API, but the bulk of the work to get going was trivial.&lt;/p&gt;
-&lt;h2&gt;Impressions&lt;/h2&gt;
+&lt;h2 id="impressions"&gt;Impressions&lt;/h2&gt;
 &lt;p&gt;The SwaggerUI page is &lt;strong&gt;really&lt;/strong&gt; great for exploring and documenting APIs. Often it's hard to grasp how to integrate with some new code from reading it, but here you can actually play with the interface, press buttons to see what happens, and provide input and follow it through different API calls - really nice to use. Definitely like it and plan to use it more.&lt;/p&gt;
 &lt;p&gt;With a bit of reading of the &lt;code&gt;Flask-RESTPlus&lt;/code&gt; docs you can edit all the fields and documentation in the Swagger UI page so you can make it as easy to use as possible - looks like it's fully featured in that respect and was a good choice.&lt;/p&gt;
-&lt;h2&gt;Gotchas&lt;/h2&gt;
+&lt;h2 id="gotchas"&gt;Gotchas&lt;/h2&gt;
 &lt;p&gt;It wasn't entirely plain sailing though - here are the main problems I hit that it's worth being aware of!&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;
@@ -323,6 +323,6 @@
 &lt;p&gt;If you use the &lt;code&gt;@api.expect&lt;/code&gt; decorator to state what model the incoming data must match, &lt;code&gt;Flask-RESTPlus&lt;/code&gt; won't force incoming data to conform unless you set the &lt;code&gt;validate=True&lt;/code&gt; parameter on it - seems like the wrong default to me...&lt;/p&gt;
 &lt;/li&gt;
 &lt;/ul&gt;
-&lt;h2&gt;End Result&lt;/h2&gt;
+&lt;h2 id="end-result"&gt;End Result&lt;/h2&gt;
 &lt;p&gt;And here's the result - &lt;a href="https://github.com/olipratt/microstore"&gt;microstore&lt;/a&gt; - a trivial datastore with a rest API and documented and interactive via SwaggerUI. I kept all the code &lt;a href="https://github.com/olipratt/microstore/blob/master/microstore.py"&gt;in one file&lt;/a&gt; to make it as simple a reference as possible.&lt;/p&gt;
 &lt;p&gt;I'd say it was a success, and was a fun weekend!&lt;/p&gt;</content><category term="Python"></category><category term="REST"></category><category term="Swagger"></category><category term="Flask-RESTPlus"></category></entry></feed>

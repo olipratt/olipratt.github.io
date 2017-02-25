@@ -29,7 +29,7 @@
 <meta property="og:site_name" content="Oli Pratt"/>
 <meta property="og:title" content="Python REST API With SwaggerUI"/>
 <meta property="og:description" content="What with REST APIs and the swagger framework for documenting and integrating them being the in-thing lately, to start getting to grips with them I wanted to see how easy it would be to create a simple one in Python with minimal code from me. Turns out it was very …"/>
-<meta property="og:locale" content="en_US"/>
+<meta property="og:locale" content="en_GB"/>
 <meta property="og:url" content="http://olipratt.co.uk/python-rest-api-with-swaggerui.html"/>
 <meta property="og:type" content="article"/>
 <meta property="article:published_time" content="2016-10-29 11:45:00+01:00"/>
@@ -92,6 +92,7 @@
           Posted on Sat 29 October 2016 in <a href="http://olipratt.co.uk/category/rest.html">REST</a>
 
 
+        &#8226; 3 min read
     </p>
   </header>
 
@@ -99,17 +100,17 @@
   <div>
     <p>What with REST APIs and the <a href="http://swagger.io/">swagger</a> framework for documenting and integrating them being the in-thing lately, to start getting to grips with them I wanted to see how easy it would be to create a simple one in Python with minimal code from me. Turns out it was very simple.</p>
 <p>As practice project I picked writing a really simple datastore.</p>
-<h2>Choosing a Package</h2>
+<h2 id="choosing-a-package">Choosing a Package</h2>
 <p>After looking around for something that provides a SwaggerUI (<a href="http://petstore.swagger.io/">demo here</a> to see what this looks like) and schema, I found <a href="https://flask-restplus.readthedocs.io/en/stable/index.html">Flask-RESTPlus</a> which does this <a href="https://flask-restplus.readthedocs.io/en/stable/swagger.html#swagger-ui">really easily out of the box</a>. It also builds on top of <a href="http://flask.pocoo.org/">Flask</a> which I've heard good things about and wanted to try for a while - having only used <a href="http://cherrypy.org/">cherrypy</a> before myself.</p>
 <p>Another thing I wanted was to be able to easily test the API, and it seemed  <code>Flask</code> is really <a href="http://flask.pocoo.org/docs/0.11/testing/">easy to test</a>, and so by extension so is <code>Flask-RESTPlus</code> as it just plugs in on top. So this combo sounded like a good choice to get going.</p>
 <p>I also needed some way to store the data and so looked for a really simple key-value store. A quick search gave <a href="http://tinydb.readthedocs.io/en/latest/getting-started.html">TinyDB</a> - small, easy to set up, and stores Python <code>dict</code>s directly (<a href="https://docs.python.org/3.5/library/json.html#json.loads">easily converted to</a> from the JSON used in the API).</p>
-<h2>Getting Started</h2>
+<h2 id="getting-started">Getting Started</h2>
 <p>Getting something up and running was very straightforward - I followed the tutorial <a href="http://michal.karzynski.pl/blog/2016/06/19/building-beautiful-restful-apis-using-flask-swagger-ui-flask-restplus/">here</a> and wrote tests as I went.</p>
 <p>That was followed by lots of tweaking/playing with the contents of the SwaggerUI page and working out how to create data models to enforce on the API, but the bulk of the work to get going was trivial.</p>
-<h2>Impressions</h2>
+<h2 id="impressions">Impressions</h2>
 <p>The SwaggerUI page is <strong>really</strong> great for exploring and documenting APIs. Often it's hard to grasp how to integrate with some new code from reading it, but here you can actually play with the interface, press buttons to see what happens, and provide input and follow it through different API calls - really nice to use. Definitely like it and plan to use it more.</p>
 <p>With a bit of reading of the <code>Flask-RESTPlus</code> docs you can edit all the fields and documentation in the Swagger UI page so you can make it as easy to use as possible - looks like it's fully featured in that respect and was a good choice.</p>
-<h2>Gotchas</h2>
+<h2 id="gotchas">Gotchas</h2>
 <p>It wasn't entirely plain sailing though - here are the main problems I hit that it's worth being aware of!</p>
 <ul>
 <li>
@@ -122,7 +123,7 @@
 <p>If you use the <code>@api.expect</code> decorator to state what model the incoming data must match, <code>Flask-RESTPlus</code> won't force incoming data to conform unless you set the <code>validate=True</code> parameter on it - seems like the wrong default to me...</p>
 </li>
 </ul>
-<h2>End Result</h2>
+<h2 id="end-result">End Result</h2>
 <p>And here's the result - <a href="https://github.com/olipratt/microstore">microstore</a> - a trivial datastore with a rest API and documented and interactive via SwaggerUI. I kept all the code <a href="https://github.com/olipratt/microstore/blob/master/microstore.py">in one file</a> to make it as simple a reference as possible.</p>
 <p>I'd say it was a success, and was a fun weekend!</p>
   </div>

@@ -29,7 +29,7 @@
 <meta property="og:site_name" content="Oli Pratt"/>
 <meta property="og:title" content="Python Microservice Logging"/>
 <meta property="og:description" content="After looking into microservices recently, I was running multiple terminals and switching between them to look at logs as they are written to screen. This was a little awkward so I thought it was worth looking for the right way to log to a central location from multiple microservices. Ideally …"/>
-<meta property="og:locale" content="en_US"/>
+<meta property="og:locale" content="en_GB"/>
 <meta property="og:url" content="http://olipratt.co.uk/python-microservice-logging.html"/>
 <meta property="og:type" content="article"/>
 <meta property="article:published_time" content="2017-02-25 14:39:00+00:00"/>
@@ -91,19 +91,20 @@
           Posted on Sat 25 February 2017 in <a href="http://olipratt.co.uk/category/logging.html">Logging</a>
 
 
+        &#8226; 5 min read
     </p>
   </header>
 
 
   <div>
     <p>After looking into <a href="http://olipratt.co.uk/python-rest-api-with-swaggerui.html">microservices</a> <a href="http://olipratt.co.uk/python-rest-api-client-adhering-to-a-swagger-schema.html">recently</a>, I was running multiple terminals and switching between them to look at logs as they are written to screen. This was a little awkward so I thought it was worth looking for the right way to log to a central location from multiple microservices. Ideally I wanted do this just using the Python logging library, and without adding more dependencies to every service.</p>
-<p>This meant a lot of reading around to reach a rather boring and obvious solution. I documented my whistle-stop tour around the world of logging, but jump to the end to just see the <a href="#solution">solution</a> I went with.</p>
-<h2>Picking a format</h2>
-<h4>Open Standards</h4>
+<p>This meant a lot of reading around to reach a rather boring and obvious solution. I documented my whistle-stop tour around the world of logging, but jump to the end to just see the <a href="#real-solution">solution</a> I went with.</p>
+<h2 id="picking-a-format">Picking a format</h2>
+<h4 id="open-standards">Open Standards</h4>
 <p>Straight off - there's no obvious standardised server package for receiving logs over the network from the Python logging module. I initially thought this whole thing would just take a 5 minute search - maybe this should have been a clue.</p>
 <p>So I started looking around for other open logging formats and log stores. Turns out there's quite a few of these.  <a href="http://docs.graylog.org/en/2.2/pages/gelf.html">GELF</a> seemed like maybe a good option. It's open, JSON structured format, integrates with many log stores, and has a <a href="https://github.com/severb/graypy">Python logging module handler</a>.</p>
 <p><a href="http://docs.graylog.org/en/2.2/pages/installation.html">The GELF server</a> is pretty massive though - delivered as a whole VM, ideally I just wanted a simple listener script I could run. I did find a <a href="http://idlethreat.com/blog/graylog/gelf-listener-in-python/">single simple server implementation</a>, but that was it. I got it all running easily enough, and though I could have tidied it up and used it, I felt I was off the beaten path and had added a new dependency to every service for logging so kept digging for a bit.</p>
-<h4>Too Cumbersome - Back to Simple HTTP</h4>
+<h4 id="too-cumbersome-back-to-simple-http">Too Cumbersome - Back to Simple HTTP</h4>
 <p>Going back to the logging module, it looked like basic <a href="https://docs.python.org/3/library/logging.handlers.html#httphandler">HTTPHandler</a> would do, and meant no dependencies. However, I found <a href="http://ericshtiv.blogspot.co.uk/2012/12/python-fast-http-logging-handler.html">warnings that it was slow</a>, but then a <a href="http://plumberjack.blogspot.co.uk/2010/09/improved-queuehandler-queuelistener.html">solution</a> to that using the logging module's <a href="https://docs.python.org/3.6/library/logging.handlers.html#queuehandler">queuehandler</a>.</p>
 <p>I got that working, but the POST body from the HTTPHandler was not JSON but just a <a href="http://stackoverflow.com/a/14551320">URL encoded string</a>. I could easily decode this in a Flask server, but then it was still a lot of code to copy paste and I might as well just shove in a JSON body instead. So I reworked that into a REST log handler - which I still have lying around:</p>
 <div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">configure_remote_logging</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">client_name</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">):</span>
@@ -168,7 +169,7 @@
 <li>I've added a dependency on <code>requests</code> in there.</li>
 </ul>
 <p>Sigh.</p>
-<h4>No, No - Let's Use a Standard</h4>
+<h4 id="no-no-lets-use-a-standard">No, No - Let's Use a Standard</h4>
 <p>Clearly that's the wrong approach - throw it away and start over. Really we should be going with a standard so we can integrate with other things, and that ended up with me looking into syslog since</p>
 <ul>
 <li>it seemed frequently <a href="http://www.structlog.org/en/stable/logging-best-practices.html#syslog-again">recommended</a>,</li>
@@ -209,7 +210,7 @@
 
 <p><em>Aside: I had to build the formatter to match the RFC standard syslog format because I couldn't easily find one elsewhere - might come in handy.</em></p>
 <p>So this now works fine, it's a reasonable chunk of code, but it's mostly just boilerplate stuff setting up the built in logging module, and the only custom part is setting up the right formatter. All done?</p>
-<h2><a name="solution"></a>Real Solution</h2>
+<h2 id="real-solution">Real Solution</h2>
 <p>So after all that, I think I'm done and move on to something else - containerising these apps was up next for me - ...and that's when I stumble across the <em>right</em> answer. It's right <a href="https://12factor.net/logs">here</a> in these <a href="https://12factor.net/">guidelines to writing services</a>:</p>
 <p><strong><em>Just write your logs to stdout.</em></strong></p>
 <p>That's it! Then whatever is running your app pipes them out and handles them appropriately. Anything else you do is just another system someone has to worry about integrating into their setup. <a href="https://docs.docker.com/engine/reference/commandline/logs/#/extended-description">Docker by default assumes an app will send logs to stdout</a> and handles them as configured. I saw this in action when I started using Docker - I'll write that up soon.</p>

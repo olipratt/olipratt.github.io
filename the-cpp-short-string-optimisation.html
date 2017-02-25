@@ -29,7 +29,7 @@
 <meta property="og:site_name" content="Oli Pratt"/>
 <meta property="og:title" content="The C++ Short String Optimisation"/>
 <meta property="og:description" content="While learning and reading up on C++11 recently, I came across the Short String Optimisation. I'd at some point been told (or somehow got it into my head), that C unions are generally dangerous and are something you should steer well clear of, so I'd never really known …"/>
-<meta property="og:locale" content="en_US"/>
+<meta property="og:locale" content="en_GB"/>
 <meta property="og:url" content="http://olipratt.co.uk/the-cpp-short-string-optimisation.html"/>
 <meta property="og:type" content="article"/>
 <meta property="article:published_time" content="2016-11-19 12:28:00+00:00"/>
@@ -91,6 +91,7 @@
           Posted on Sat 19 November 2016 in <a href="http://olipratt.co.uk/category/performance.html">Performance</a>
 
 
+        &#8226; 4 min read
     </p>
   </header>
 
@@ -99,21 +100,21 @@
     <p>While learning and reading up on C++11 recently, I came across the Short String Optimisation.</p>
 <p>I'd at some point been told (or somehow got it into my head), that C <code>union</code>s are generally dangerous and are something you should steer well clear of, so I'd never really known what they were about. However, from learning about the SSO it's clear they can make for some very efficient memory use as long as you are careful. (If you're familiar with <code>union</code>s this whole thing will probably be underwhelming!).</p>
 <p>I'll attempt an explanation here in my own words so I can make sure I understand the topic.</p>
-<h2>Deriving the SSO</h2>
-<h3>Baby Steps</h3>
+<h2 id="deriving-the-sso">Deriving the SSO</h2>
+<h3 id="baby-steps">Baby Steps</h3>
 <p>Let's try and implement a C++ <code>string</code> class, and be as memory and processor efficient as we can. Assuming a 64-bit system, we'll need at least:</p>
 <ul>
 <li>A <code>char *string</code> pointer to the string - the string itself will have to be on the heap somewhere as it can be arbitrarily large,</li>
 <li>A <code>uint64_t length</code> - again allowing for arbitrary largeness.</li>
 </ul>
 <p>That's pretty good so far, only 16 bytes used and we can manage arbitrarily large strings.</p>
-<h3>Minimising Reallocation</h3>
+<h3 id="minimising-reallocation">Minimising Reallocation</h3>
 <p>Now imagine we're working with a string, and appending <code>char</code>s to it to build some bigger string, one-by-one. That means each time one is appended, we have to <code>realloc</code> our string, which may well mean a <code>malloc</code> of new memory, a <code>memcpy</code> of the whole string, and a <code>free</code> of the old string. That's far from ideal, so lets add one more field:</p>
 <ul>
 <li>A <code>uint64_t allocated_length</code> - this will separately store the size of any allocated memory, meaning we can, for example, double the amount of memory allocated when we run out, to achieve <a href="https://en.wikipedia.org/wiki/Dynamic_array#Geometric_expansion_and_amortized_cost">amortised constant time cost</a>.</li>
 </ul>
 <p>Cool, we're up to 24 bytes now and can handle large strings pretty optimally.</p>
-<h3>Wasn't This About Short Strings?</h3>
+<h3 id="wasnt-this-about-short-strings">Wasn't This About Short Strings?</h3>
 <p>What about small strings though? If I create only a little string <code>Hello world!</code>, I have to allocate some memory on the heap to hold it. Going further, say I create an array of several two character strings, every single one has to separately allocate and later free memory. That's not great, so lets try and improve it.</p>
 <p>We could add a small array to our string class that we use for small strings - say something like:</p>
 <ul>
@@ -144,7 +145,7 @@
 <li><code>char</code> array of the same size as the above takes up - 16 bytes here.</li>
 </ul>
 <p>Now if our string is 16 characters or shorter, we can pack it directly into the memory of the string class itself, and if it's longer, we treat the union as a pointer and length and store the string there instead!</p>
-<h3>But Wait, There's More</h3>
+<h3 id="but-wait-theres-more">But Wait, There's More</h3>
 <p>In the case above that we're using the short string buffer, the largest length we need to store is going to be 15 (assuming the string is stored null-terminated), so the <code>uint64_t</code> is overkill. Let's try turning the whole thing into one big <code>union</code>, using only a single byte to store the length in the short case:</p>
 <div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">string</span>
 <span class="p">{</span>
@@ -168,7 +169,7 @@
 
 <p>Great, now our short string can be 23 bytes long, but there's one problem - how do we know which type to treat the <code>union</code> as when using this class?</p>
 <p>To solve this, we can take advantage of the fact that in the short case we need only about 5 bits to store the length, and  <em>surely</em> no-one will mind if we limit them to a paltry <code>2^63</code><sup id="fnref-2"><a class="footnote-ref" href="#fn-2">2</a></sup> byte string, so lets steal the high bit<sup id="fnref-3"><a class="footnote-ref" href="#fn-3">3</a></sup> from the length to act as a flag for whether we're treating the union one way or the other.</p>
-<h3>Squeezing Out the Last Drops</h3>
+<h3 id="squeezing-out-the-last-drops">Squeezing Out the Last Drops</h3>
 <p>There's one final thing we can tweak to do better. As it stands, swapping back and forth from a 23 byte to a 24 byte string means allocating a string and copying into it one way, and then copying back and freeing it the other. Instead once we allocate a string and set the bit flag, we can just never unset it - so when a string shrinks to 23 bytes or less, we just continue using the allocated space.</p>
 <p>And that's how we can use just 24 bytes of space to point to arbitrarily long strings <em>and</em> still store 23 byte strings without having to allocate any extra memory!</p>
 <div class="footnote">
