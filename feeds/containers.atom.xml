@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Oli Pratt - Containers</title><link href="http://olipratt.co.uk/" rel="alternate"></link><link href="http://olipratt.co.uk/feeds/containers.atom.xml" rel="self"></link><id>http://olipratt.co.uk/</id><updated>2017-03-01T21:36:00+00:00</updated><entry><title>Docker Container for a simple Flask App</title><link href="http://olipratt.co.uk/docker-container-for-a-simple-flask-app.html" rel="alternate"></link><published>2017-03-01T21:36:00+00:00</published><updated>2017-03-01T21:36:00+00:00</updated><author><name>Oli Pratt</name></author><id>tag:olipratt.co.uk,2017-03-01:/docker-container-for-a-simple-flask-app.html</id><summary type="html">&lt;p&gt;Continuing the recent microservices trend, I tried to containerise a previous project, a small REST datastore - &lt;a href="http://olipratt.co.uk/python-rest-api-with-swaggerui.html"&gt;microstore&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;I'm not going to go into detail on what containers are (not least because I don't think I could!) - but briefly they are a way to package up an app and it's dependencies …&lt;/p&gt;</summary><content type="html">&lt;p&gt;Continuing the recent microservices trend, I tried to containerise a previous project, a small REST datastore - &lt;a href="http://olipratt.co.uk/python-rest-api-with-swaggerui.html"&gt;microstore&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;I'm not going to go into detail on what containers are (not least because I don't think I could!) - but briefly they are a way to package up an app and it's dependencies so they can be run in their own mini-environment. The best intro is just to follow the tutorial &lt;a href="https://docs.docker.com/engine/getstarted/"&gt;here&lt;/a&gt;.&lt;/p&gt;
+&lt;h2 id="creating-the-container"&gt;Creating the Container&lt;/h2&gt;
+&lt;p&gt;I installed &lt;a href="https://docs.docker.com/engine/installation/linux/centos/"&gt;Docker on CentOS&lt;/a&gt;. It warns you not to just &lt;code&gt;yum install&lt;/code&gt;, so instead I followed the &lt;em&gt;Install from a package&lt;/em&gt; instructions - but note that you now have to always run docker commands with &lt;code&gt;sudo&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;Containerising an app was simple - basically &lt;a href="https://runnable.com/docker/python/dockerize-your-flask-application"&gt;just follow this tutorial&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;a href="https://github.com/olipratt/microstore/blob/master/Dockerfile"&gt;Here's&lt;/a&gt; the &lt;code&gt;Dockerfile&lt;/code&gt; I created following that - now in the microstore repo.&lt;/p&gt;
+&lt;p&gt;Note I had to set the app to listen on &lt;code&gt;0.0.0.0&lt;/code&gt; because we are going to forward ports to outside the container, so need to listen on a public address inside the container.&lt;/p&gt;
+&lt;p&gt;So if you have docker installed, just:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;get a clone of the microstore repo,&lt;/li&gt;
+&lt;li&gt;build the container image with: &lt;code&gt;sudo docker build -t microstore:latest .&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;then run it with: &lt;code&gt;sudo docker run -p 5000:5000 microstore&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;The &lt;code&gt;-p 5000:5000&lt;/code&gt; binds port 5000 of the container to port 5000 on the host.
+So now you can just go to &lt;code&gt;http://127.0.0.1:5000/&lt;/code&gt; in your web browser and you should see the SwaggerUI running!&lt;/p&gt;
+&lt;p&gt;Some notes on running containers:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;If there's a problem building/running the app, you can just run the same commands again after fixing the problem.&lt;/li&gt;
+&lt;li&gt;Add the &lt;code&gt;-d&lt;/code&gt; option to run the container in the background.&lt;/li&gt;
+&lt;li&gt;Note &lt;code&gt;sudo docker ps&lt;/code&gt; shows what containerised apps are running.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="shipping-an-image"&gt;Shipping an Image&lt;/h2&gt;
+&lt;p&gt;You can now create the final container ready to ship with &lt;code&gt;sudo docker save microstore &amp;gt; microstore.tar&lt;/code&gt;. This one was about 300MB when I created it.&lt;/p&gt;
+&lt;p&gt;Later/elsewhere you can reload it with &lt;code&gt;sudo docker load &amp;lt; microstore.tar&lt;/code&gt;.&lt;/p&gt;
+&lt;h2 id="composing-multiple-containers"&gt;Composing Multiple Containers&lt;/h2&gt;
+&lt;p&gt;Now I'd got one running, I wanted to see how you'd ship several microservices given they would need to contact each other over IP somehow. Turns out that's simple too using &lt;code&gt;docker-compose&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;Again, not going into detail on this as it's all online.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;There's a good tutorial &lt;a href="https://docs.docker.com/compose/gettingstarted/"&gt;here&lt;/a&gt;.&lt;/li&gt;
+&lt;li&gt;You may need to specify a &lt;a href="https://docs.docker.com/compose/startup-order/"&gt;startup order&lt;/a&gt; so that a service is created before another tries to connect to it.&lt;/li&gt;
+&lt;li&gt;Networking between services is also simple - basically &lt;a href="https://docs.docker.com/compose/networking/"&gt;access the name of a service in the compose file as a hostname&lt;/a&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;I set up my little card deck service with a &lt;a href="https://github.com/olipratt/microcarddeck/blob/master/Dockerfile"&gt;Dockerfile&lt;/a&gt; and &lt;a href="https://github.com/olipratt/microcarddeck/blob/master/docker-compose.yml"&gt;compose file&lt;/a&gt; to run it and the microstore together. If you built the microstore container above, then by just running &lt;code&gt;sudo docker-compose up&lt;/code&gt; in the card deck repo it will build the second image and then run them both together - magic!&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;One note - I was confused that &lt;code&gt;sudo docker-compose up&lt;/code&gt; didn't rebuild the image after fixing a bug in the &lt;code&gt;Dockerfile&lt;/code&gt; but, as per &lt;a href="https://github.com/docker/compose/issues/1487"&gt;here&lt;/a&gt;, you need to run &lt;code&gt;sudo docker-compose build&lt;/code&gt; to force it to rebuild - &lt;code&gt;up&lt;/code&gt; won't ever rebuild.&lt;/em&gt;&lt;/p&gt;
+&lt;h2 id="tidying-up"&gt;Tidying up&lt;/h2&gt;
+&lt;p&gt;Docker seems to leave images that you create as you iterate lying around, and you have to do a bit of manual cleanup at the end. As noted in &lt;a href="https://docs.docker.com/compose/gettingstarted/"&gt;here&lt;/a&gt; you can clear up composed containers with &lt;code&gt;sudo docker-compose down&lt;/code&gt;. You can then &lt;a href="https://docs.docker.com/engine/reference/commandline/image_prune/"&gt;prune&lt;/a&gt; and &lt;a href="https://docs.docker.com/engine/reference/commandline/rm/#/remove-all-stopped-containers"&gt;remove unused images&lt;/a&gt;.&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;That was really simple and Docker seems like a great way for running at least simple apps in a controlled environment. What's been your experience with Docker, if any?&lt;/p&gt;</content><category term="Python"></category><category term="Flask"></category><category term="Container"></category><category term="Docker"></category><category term="microservice"></category></entry></feed>

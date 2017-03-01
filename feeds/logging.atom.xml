@@ -19,7 +19,7 @@
     &lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;RESTHandler&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;logging&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Handler&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
         &lt;span class="sd"&gt;&amp;quot;&amp;quot;&amp;quot;Handler which sends logs to a REST log server.&amp;quot;&amp;quot;&amp;quot;&lt;/span&gt;
 
-        &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="fm"&gt;__init__&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;url&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;client_name&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+        &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;__init__&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;url&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;client_name&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
             &lt;span class="nb"&gt;super&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;RESTHandler&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="fm"&gt;__init__&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
             &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;url&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;url&lt;/span&gt;
             &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;client_name&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;client_name&lt;/span&gt;
@@ -59,7 +59,7 @@
     &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;post&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
         &lt;span class="sd"&gt;&amp;quot;&amp;quot;&amp;quot;Receives a log.&amp;quot;&amp;quot;&amp;quot;&lt;/span&gt;
         &lt;span class="n"&gt;log&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;handle&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;logging&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;makeLogRecord&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;request&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;get_json&lt;/span&gt;&lt;span class="p"&gt;()))&lt;/span&gt;
-        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="bp"&gt;None&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;201&lt;/span&gt;
+        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="kc"&gt;None&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;201&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -116,5 +116,6 @@
 &lt;p&gt;So after all that, I think I'm done and move on to something else - containerising these apps was up next for me - ...and that's when I stumble across the &lt;em&gt;right&lt;/em&gt; answer. It's right &lt;a href="https://12factor.net/logs"&gt;here&lt;/a&gt; in these &lt;a href="https://12factor.net/"&gt;guidelines to writing services&lt;/a&gt;:&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;&lt;em&gt;Just write your logs to stdout.&lt;/em&gt;&lt;/strong&gt;&lt;/p&gt;
 &lt;p&gt;That's it! Then whatever is running your app pipes them out and handles them appropriately. Anything else you do is just another system someone has to worry about integrating into their setup. &lt;a href="https://docs.docker.com/engine/reference/commandline/logs/#/extended-description"&gt;Docker by default assumes an app will send logs to stdout&lt;/a&gt; and handles them as configured. I saw this in action when I started using Docker - I'll write that up soon.&lt;/p&gt;
+&lt;hr&gt;
 &lt;p&gt;So that was an interesting bit of investigation, and I learnt some stuff, but damn if it doesn't feel like a waste of time.&lt;/p&gt;
-&lt;p&gt;How do you handle logging from your Python apps?&lt;/p&gt;</content><category term="Python"></category><category term="logging"></category><category term="syslog"></category></entry></feed>
+&lt;p&gt;How do you handle logging from your Python apps?&lt;/p&gt;</content><category term="Python"></category><category term="logging"></category><category term="syslog"></category><category term="microservice"></category></entry></feed>

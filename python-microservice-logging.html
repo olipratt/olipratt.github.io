@@ -9,6 +9,7 @@
   <link rel="stylesheet" type="text/css" href="http://olipratt.co.uk/theme/pygments/monokai.min.css">
   <link rel="stylesheet" type="text/css" href="http://olipratt.co.uk/theme/font-awesome/css/font-awesome.min.css">
 
+    <link href="http://olipratt.co.uk/static/custom.css" rel="stylesheet">
 
     <link href="http://olipratt.co.uk/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="Oli Pratt Atom">
 
@@ -25,7 +26,7 @@
 
 <meta name="author" content="Oli Pratt" />
 <meta name="description" content="After looking into microservices recently, I was running multiple terminals and switching between them to look at logs as they are written to screen. This was a little awkward so I thought it was worth looking for the right way to log to a central location from multiple microservices. Ideally …" />
-<meta name="keywords" content="Python, logging, syslog">
+<meta name="keywords" content="Python, logging, syslog, microservice">
 <meta property="og:site_name" content="Oli Pratt"/>
 <meta property="og:title" content="Python Microservice Logging"/>
 <meta property="og:description" content="After looking into microservices recently, I was running multiple terminals and switching between them to look at logs as they are written to screen. This was a little awkward so I thought it was worth looking for the right way to log to a central location from multiple microservices. Ideally …"/>
@@ -39,6 +40,7 @@
 <meta property="article:tag" content="Python"/>
 <meta property="article:tag" content="logging"/>
 <meta property="article:tag" content="syslog"/>
+<meta property="article:tag" content="microservice"/>
 <meta property="og:image" content="/static/images/site_logo.png">
 
   <title>Oli Pratt &ndash; Python Microservice Logging</title>
@@ -117,7 +119,7 @@
     <span class="k">class</span> <span class="nc">RESTHandler</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">Handler</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Handler which sends logs to a REST log server.&quot;&quot;&quot;</span>
 
-        <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">client_name</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">client_name</span><span class="p">):</span>
             <span class="nb">super</span><span class="p">(</span><span class="n">RESTHandler</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">url</span> <span class="o">=</span> <span class="n">url</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">client_name</span> <span class="o">=</span> <span class="n">client_name</span>
@@ -157,7 +159,7 @@
     <span class="k">def</span> <span class="nf">post</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Receives a log.&quot;&quot;&quot;</span>
         <span class="n">log</span><span class="o">.</span><span class="n">handle</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">makeLogRecord</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">get_json</span><span class="p">()))</span>
-        <span class="k">return</span> <span class="bp">None</span><span class="p">,</span> <span class="mi">201</span>
+        <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="mi">201</span>
 </pre></div>
 
 
@@ -214,6 +216,7 @@
 <p>So after all that, I think I'm done and move on to something else - containerising these apps was up next for me - ...and that's when I stumble across the <em>right</em> answer. It's right <a href="https://12factor.net/logs">here</a> in these <a href="https://12factor.net/">guidelines to writing services</a>:</p>
 <p><strong><em>Just write your logs to stdout.</em></strong></p>
 <p>That's it! Then whatever is running your app pipes them out and handles them appropriately. Anything else you do is just another system someone has to worry about integrating into their setup. <a href="https://docs.docker.com/engine/reference/commandline/logs/#/extended-description">Docker by default assumes an app will send logs to stdout</a> and handles them as configured. I saw this in action when I started using Docker - I'll write that up soon.</p>
+<hr>
 <p>So that was an interesting bit of investigation, and I learnt some stuff, but damn if it doesn't feel like a waste of time.</p>
 <p>How do you handle logging from your Python apps?</p>
   </div>
@@ -222,6 +225,7 @@
       <a href="http://olipratt.co.uk/tag/python.html">Python</a>
       <a href="http://olipratt.co.uk/tag/logging.html">logging</a>
       <a href="http://olipratt.co.uk/tag/syslog.html">syslog</a>
+      <a href="http://olipratt.co.uk/tag/microservice.html">microservice</a>
     </p>
   </div>
 
