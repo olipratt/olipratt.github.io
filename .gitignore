@@ -1,0 +1,5 @@
+theme/img/profile_license.txt
+theme/img/profile.png
+theme/stylesheet/*.less
+theme/pygments/*.css
+!theme/pygments/*.min.css
