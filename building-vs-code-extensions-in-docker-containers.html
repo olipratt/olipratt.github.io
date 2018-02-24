@@ -1,0 +1,246 @@
+
+<!DOCTYPE html>
+<html lang="english">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="HandheldFriendly" content="True" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="index, follow" />
+
+  <link href='//fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,700,400italic' rel='stylesheet' type='text/css'>
+
+    <link rel="stylesheet" type="text/css" href="http://olipratt.co.uk/theme/stylesheet/style.min.css">
+
+  <link rel="stylesheet" type="text/css" href="http://olipratt.co.uk/theme/pygments/monokai.min.css">
+  <link rel="stylesheet" type="text/css" href="http://olipratt.co.uk/theme/font-awesome/css/font-awesome.min.css">
+
+    <link href="http://olipratt.co.uk/static/custom.css" rel="stylesheet">
+
+    <link href="http://olipratt.co.uk/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="Oli Pratt Atom">
+
+
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+
+
+    <!-- Chrome, Firefox OS and Opera -->
+    <meta name="theme-color" content="#282828">
+    <!-- Windows Phone -->
+    <meta name="msapplication-navbutton-color" content="#282828">
+    <!-- iOS Safari -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <!-- Microsoft EDGE -->
+    <meta name="msapplication-TileColor" content="#282828">
+
+<meta name="author" content="Oli Pratt" />
+<meta name="description" content="TL;DR VS Code is an editor that allows you to write and share custom extensions. These extensions require Node.js and npm installed, which you might not want to install locally - especially given recent, scary issues. Instead, using the Dockerfile and commands below, you can build extensions inside a …" />
+<meta name="keywords" content="VS Code, Docker">
+
+<meta property="og:site_name" content="Oli Pratt"/>
+<meta property="og:title" content="Building VS Code Extensions in Docker Containers"/>
+<meta property="og:description" content="TL;DR VS Code is an editor that allows you to write and share custom extensions. These extensions require Node.js and npm installed, which you might not want to install locally - especially given recent, scary issues. Instead, using the Dockerfile and commands below, you can build extensions inside a …"/>
+<meta property="og:locale" content="en_GB"/>
+<meta property="og:url" content="http://olipratt.co.uk/building-vs-code-extensions-in-docker-containers.html"/>
+<meta property="og:type" content="article"/>
+<meta property="article:published_time" content="2018-02-23 19:52:00+00:00"/>
+<meta property="article:modified_time" content=""/>
+<meta property="article:author" content="http://olipratt.co.uk/author/oli-pratt.html">
+<meta property="article:section" content="Editors"/>
+<meta property="article:tag" content="VS Code"/>
+<meta property="article:tag" content="Docker"/>
+<meta property="og:image" content="/static/images/site_logo.png">
+
+  <title>Oli Pratt &ndash; Building VS Code Extensions in Docker Containers</title>
+
+</head>
+<body>
+  <aside>
+    <div>
+      <a href="http://olipratt.co.uk">
+        <img src="/static/images/site_logo.png" alt="Oli Pratt" title="Oli Pratt">
+      </a>
+      <h1><a href="http://olipratt.co.uk">Oli Pratt</a></h1>
+
+<p>Software Engineer</p>
+      <nav>
+        <ul class="list">
+          <li><a href="http://olipratt.co.uk/pages/about.html#about">About</a></li>
+
+          <li><a href="https://www.metaswitch.com/" target="_blank">Metaswitch</a></li>
+        </ul>
+      </nav>
+
+      <ul class="social">
+        <li><a class="sc-github" href="https://github.com/olipratt" target="_blank"><i class="fa fa-github"></i></a></li>
+        <li><a class="sc-linkedin" href="https://www.linkedin.com/in/olipratt/" target="_blank"><i class="fa fa-linkedin"></i></a></li>
+        <li><a class="sc-rss" href="/feeds/all.atom.xml" target="_blank"><i class="fa fa-rss"></i></a></li>
+      </ul>
+    </div>
+
+
+  </aside>
+  <main>
+
+    <nav>
+      <a href="http://olipratt.co.uk">    Home
+</a>
+
+      <a href="/archives.html">Archives</a>
+      <a href="/categories.html">Categories</a>
+      <a href="/tags.html">Tags</a>
+
+      <a href="http://olipratt.co.uk/feeds/all.atom.xml">    Atom
+</a>
+
+    </nav>
+
+<article class="single">
+  <header>
+      
+    <h1 id="building-vs-code-extensions-in-docker-containers">Building VS Code Extensions in Docker Containers</h1>
+    <p>
+          Posted on Fri 23 February 2018 in <a href="http://olipratt.co.uk/category/editors.html">Editors</a>
+
+
+        &#8226; 3 min read
+    </p>
+  </header>
+
+
+  <div>
+    <h4 id="tldr">TL;DR</h4>
+<ul>
+<li>
+<p><a href="https://code.visualstudio.com/">VS Code</a> is an editor that allows you to <a href="https://code.visualstudio.com/docs/extensions/example-hello-world">write</a> and <a href="https://marketplace.visualstudio.com/">share</a> custom extensions.</p>
+</li>
+<li>
+<p>These extensions require <code>Node.js</code> and <code>npm</code> installed, which you might not want to install locally - especially <a href="https://www.bleepingcomputer.com/news/linux/botched-npm-update-crashes-linux-systems-forces-users-to-reinstall/">given recent, scary issues</a>.</p>
+</li>
+<li>
+<p>Instead, using the <code>Dockerfile</code> and commands below, you can build extensions inside a Docker container and still test and run them inside the VS Code installation on the same machine without Node installed.</p>
+</li>
+</ul>
+<h2 id="background">Background</h2>
+<p>I've been using VS Code as my main editor for personal work for some time now, but only just got around to trying to create an extension.</p>
+<p>I don't do any Node or Javascript development normally, so don't have Node/NPM installed, and <a href="https://code.visualstudio.com/docs/extensions/example-hello-world">that's the first thing the docs tell you to do</a>.
+Keen not to install these on my system given the bloat I've heard they add and <a href="https://www.bleepingcomputer.com/news/linux/botched-npm-update-crashes-linux-systems-forces-users-to-reinstall/">recent issues</a>, I wanted to do try and do the necessary generation and building in a container.</p>
+<p>Searching online for various combinations of relevant keywords only seemed to give me articles on writing extensions to work with Docker files/containers, and I had to poke about and get this working myself. I thought I'd write up how I did it in case it's useful for someone else.</p>
+<h2 id="getting-started">Getting Started</h2>
+<p>Obviously you'll need docker installed and set up.</p>
+<p>Then the following <code>Dockerfile</code> will allow you to create a container with the VS Code extension generator ready and installed.</p>
+<div class="highlight"><pre><span></span><span class="k">FROM</span><span class="s"> node:latest</span>
+
+<span class="k">RUN</span> npm install -g yo generator-code
+
+USER node
+<span class="k">WORKDIR</span><span class="s"> /home/node/</span>
+
+<span class="k">ENTRYPOINT</span><span class="s"> bash</span>
+</pre></div>
+
+
+<p>Create a copy of that <code>Dockerfile</code> and build it - I called it <code>vscodeextenv</code>:</p>
+<div class="highlight"><pre><span></span>sudo docker build -t vscodeextenv .
+</pre></div>
+
+
+<p>Now I created a directory ready and named for my extension, and mounted that into the container.</p>
+<div class="highlight"><pre><span></span>mkdir example
+sudo docker run -it <span class="se">\</span>
+     --mount <span class="nv">source</span><span class="o">=</span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span>/example,target<span class="o">=</span>/home/node/example,type<span class="o">=</span><span class="nb">bind</span> <span class="se">\</span>
+     vscodeextenv
+</pre></div>
+
+
+<p>Now you should have an environment ready to build an extension.</p>
+<p><strong><em>Gotcha:</em></strong> <em>I found out that <a href="https://docs.docker.com/storage/volumes/">docker now recommends</a> you use <code>--mount</code> to mount directories inside a container rather than <code>-v</code>, but using that ended up with the mounted directory inside the container being owned by root until I added <code>type=bind</code> to the <code>mount</code> option.</em></p>
+<h2 id="building-the-extension">Building the Extension</h2>
+<p>Here you can just run the extension generator with <code>yo code</code> and follow the prompts. I named mine example, and just used dummy values for everything else. Like a good developer I also turned on all the linting 😉.</p>
+<p>Once it's generated, <a href="https://code.visualstudio.com/docs/extensions/example-hello-world#_running-your-extension">the docs</a> say to start debugging the extension, but from what I can tell that first builds the extension, which won't work since we don't have all the dependencies installed. If I try, I get a few errors/stack traces in the debug console and this notification in the original VS Code instance</p>
+<p><img alt="Alt Text" src="/static/images/vscode_extension_debug_error.png"></p>
+<p>The second instance that's supposed to have the extension loaded does open, but doesn't have it loaded in.</p>
+<p>So we need to build it manually first.</p>
+<p>This might be obvious if you're a proficient <code>node</code> developer, but after some poking through the generated files I found the command - in the container, run:</p>
+<div class="highlight"><pre><span></span>npm run compile
+</pre></div>
+
+
+<p>You'll now have an <code>out</code> directory, which is what VS Code needs.</p>
+<p><strong><em>Gotcha:</em></strong> <em>For me the <code>compile</code> command failed with an error I think because I enabled the various linting and strict options when generating the project - this is fixed for now by commenting these lines out in <code>src/test/extension.test.ts</code></em></p>
+<div class="highlight"><pre><span></span><span class="c1">// import * as vscode from &#39;vscode&#39;;</span>
+<span class="c1">// import * as myExtension from &#39;../extension&#39;;</span>
+</pre></div>
+
+
+<h2 id="testing-the-extension-in-vs-code">Testing the extension in VS Code</h2>
+<p><em>Now</em> you should be able to, in VS Code, just open the <code>Debug</code> tab and press the <code>Play</code> button, and the new instance of VS Code with your app loaded should appear!</p>
+<p>If you've just used the default app, then <code>Ctrl+Shift+P</code> in the new instance should allow you to find the <code>hello world</code> command, and running it should correctly show the notification.</p>
+<p>The only downsides are that:</p>
+<ul>
+<li>
+<p>the original VS Code instance still shows the error in the image above (I think because it still tries to build the extension and fails), though it runs fine regardless,</p>
+</li>
+<li>
+<p>you have to remember to manually build the extension in the container before running it in the VS Code debugger.</p>
+</li>
+</ul>
+  </div>
+  <div class="tag-cloud">
+    <p>
+      <a href="http://olipratt.co.uk/tag/vs-code.html">VS Code</a>
+      <a href="http://olipratt.co.uk/tag/docker.html">Docker</a>
+    </p>
+  </div>
+
+
+  <div class="neighbors">
+    <a class="btn float-left" href="http://olipratt.co.uk/docker-container-for-a-simple-flask-app.html" title="Docker Container for a simple Flask App">
+      <i class="fa fa-angle-left"></i>     Previous Post
+
+    </a>
+  </div>
+
+    <div class="addthis_relatedposts_inline">
+
+
+<!-- Disqus -->
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'olipratt';
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>
+        Please enable JavaScript to view comments.
+
+</noscript>
+<!-- End Disqus -->
+</article>
+
+    <footer>
+<p>&copy; Oli Pratt </p>
+<p>    Powered by <a href="http://getpelican.com" target="_blank">Pelican</a> - <a href="https://github.com/alexandrevicenzi/flex" target="_blank">Flex</a> theme by <a href="http://alexandrevicenzi.com" target="_blank">Alexandre Vicenzi</a>
+</p>    </footer>
+  </main>
+
+
+
+
+<script type="application/ld+json">
+{
+  "@context" : "http://schema.org",
+  "@type" : "Blog",
+  "name": " Oli Pratt ",
+  "url" : "http://olipratt.co.uk",
+  "image": "/static/images/site_logo.png",
+  "description": "Oli Pratt's Thoughts and Writings"
+}
+</script>
+
+</body>
+</html>
