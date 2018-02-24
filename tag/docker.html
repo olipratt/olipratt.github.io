@@ -113,7 +113,11 @@
 <p>These extensions require <code>Node.js</code> and <code>npm</code> installed, which you might not want to install locally - especially <a href="https://www.bleepingcomputer.com/news/linux/botched-npm-update-crashes-linux-systems-forces-users-to-reinstall/">given recent, scary issues</a>.</p>
 </li>
 <li>
-<p>Instead, using the <code>Dockerfile</code> and commands below, you can build extensions inside a …</p></li></ul>
+<p>Instead, using the <code>Dockerfile</code> and commands below, you can build extensions inside a Docker container and still test and run them inside the VS Code installation on the same machine without Node installed.</p>
+</li>
+</ul>
+<h2 id="background">Background</h2>
+<p>I&rsquo;ve been using …</p>
       <br>
       <a class="btn" href="http://olipratt.co.uk/building-vs-code-extensions-in-docker-containers.html#building-vs-code-extensions-in-docker-containers">    Continue reading
 </a>
@@ -134,7 +138,8 @@
   <div>
         <img src="/static/images/docker_small_h.png">
       <p>Continuing the recent microservices trend, I tried to containerise a previous project, a small REST datastore - <a href="http://olipratt.co.uk/python-rest-api-with-swaggerui.html">microstore</a>.</p>
-<p>I'm not going to go into detail on what containers are (not least because I don't think I could!) - but briefly they are a way to package up an app and it's dependencies …</p>
+<p>I&rsquo;m not going to go into detail on what containers are (not least because I don&rsquo;t think I could!) - but briefly they are a way to package up an app and it&rsquo;s dependencies so they can be run in their own mini-environment. The best intro is just to follow the tutorial <a href="https://docs.docker.com/engine/getstarted/">here</a>.</p>
+<h2 id="creating-the-container">Creating the Container …</h2>
       <br>
       <a class="btn" href="http://olipratt.co.uk/docker-container-for-a-simple-flask-app.html#docker-container-for-a-simple-flask-app">    Continue reading
 </a>

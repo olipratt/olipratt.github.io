@@ -35,12 +35,12 @@
     <meta name="msapplication-TileColor" content="#282828">
 
 <meta name="author" content="Oli Pratt" />
-<meta name="description" content="After building a REST API I left it alone for a while before coming back to try and get a client working properly. Similar goals here to back then - find a good library to use going forwards that does the heavy lifting and make a simple example project. I chose …" />
+<meta name="description" content="After building a REST API I left it alone for a while before coming back to try and get a client working properly. Similar goals here to back then - find a good library to use going forwards that does the heavy lifting and make a simple example project. I chose a simple microservice that provides an API for decks of playing cards - like a casino dealer type of thing - which would be a client of …" />
 <meta name="keywords" content="Python, REST, Swagger, pyswagger, microservice">
 
 <meta property="og:site_name" content="Oli Pratt"/>
 <meta property="og:title" content="Python REST API Client Adhering to a Swagger Schema"/>
-<meta property="og:description" content="After building a REST API I left it alone for a while before coming back to try and get a client working properly. Similar goals here to back then - find a good library to use going forwards that does the heavy lifting and make a simple example project. I chose …"/>
+<meta property="og:description" content="After building a REST API I left it alone for a while before coming back to try and get a client working properly. Similar goals here to back then - find a good library to use going forwards that does the heavy lifting and make a simple example project. I chose a simple microservice that provides an API for decks of playing cards - like a casino dealer type of thing - which would be a client of …"/>
 <meta property="og:locale" content="en_GB"/>
 <meta property="og:url" content="http://olipratt.co.uk/python-rest-api-client-adhering-to-a-swagger-schema.html"/>
 <meta property="og:type" content="article"/>
@@ -116,9 +116,9 @@
     <p>After <a href="http://olipratt.co.uk/python-rest-api-with-swaggerui.html">building a REST API</a> I left it alone for a while before coming back to try and get a client working properly.</p>
 <p>Similar goals here to back then - find a good library to use going forwards that does the heavy lifting and make a simple example project. I chose a simple microservice that provides an API for decks of playing cards - like a casino dealer type of thing - which would be a client of the datastore I created in the link above.</p>
 <h2 id="choosing-a-client-package">Choosing a Client Package</h2>
-<p>The standard seems to be to <a href="https://github.com/swagger-api/swagger-codegen">generate code</a> to meet a schema, but I'd rather load it dynamically into an app if possible.</p>
-<p>After a bit of looking I found <a href="http://bravado.readthedocs.io/en/latest/">Bravado</a> which looked promising. However, it was a pain to install - it relies on the twisted package and that doesn't seem to install on Windows through pip successfully, so after some failed attempts to get it to work I gave up. I figure it's not worth using if it's going to be a pain for others to install - shame :(.</p>
-<p>Next up was <a href="http://pyswagger.readthedocs.io/en/latest/">pyswagger</a> - it seems to provide all the functionality and be well maintained (commits in the past few days when I wrote this). The API doesn't look as polished to me when compared to <code>bravado</code> above, but it worked fine in practice.</p>
+<p>The standard seems to be to <a href="https://github.com/swagger-api/swagger-codegen">generate code</a> to meet a schema, but I&rsquo;d rather load it dynamically into an app if possible.</p>
+<p>After a bit of looking I found <a href="http://bravado.readthedocs.io/en/latest/">Bravado</a> which looked promising. However, it was a pain to install - it relies on the twisted package and that doesn&rsquo;t seem to install on Windows through pip successfully, so after some failed attempts to get it to work I gave up. I figure it&rsquo;s not worth using if it&rsquo;s going to be a pain for others to install - shame :(.</p>
+<p>Next up was <a href="http://pyswagger.readthedocs.io/en/latest/">pyswagger</a> - it seems to provide all the functionality and be well maintained (commits in the past few days when I wrote this). The API doesn&rsquo;t look as polished to me when compared to <code>bravado</code> above, but it worked fine in practice.</p>
 <p>On the testing point - <code>pyswagger</code> uses  <code>requests</code> for HTTP requests, so we can easily test using the <a href="https://github.com/getsentry/responses">responses</a> library to provide mock responses to them.</p>
 <h2 id="the-first-test">The First Test</h2>
 <p>This was painful to get working, but as always trivial to fix in the end.</p>
@@ -130,8 +130,8 @@
 </ul>
 <p>However, both failed when I tried:</p>
 <ul>
-<li>if I loaded in the schema from file, <code>pyswagger</code> would then try and make API requests using the <code>file</code> scheme, which causes it to fall over as that's not a <a href="https://github.com/mission-liao/pyswagger/blob/cff50d0b49da984666e1a350cff3e7bdf71d0b13/pyswagger/contrib/client/requests.py#L11">supported scheme</a> for that part it seems.</li>
-<li>the request for the schema over the network uses <a href="https://github.com/mission-liao/pyswagger/blob/cff50d0b49da984666e1a350cff3e7bdf71d0b13/pyswagger/getter.py#L136"><code>urllib.urlopen</code> rather than <code>requests</code></a> so I couldn't easily intercept it with <code>responses</code> and would have to do more mocking of the deep internals of <code>pyswagger</code>, which seemed wrong.</li>
+<li>if I loaded in the schema from file, <code>pyswagger</code> would then try and make API requests using the <code>file</code> scheme, which causes it to fall over as that&rsquo;s not a <a href="https://github.com/mission-liao/pyswagger/blob/cff50d0b49da984666e1a350cff3e7bdf71d0b13/pyswagger/contrib/client/requests.py#L11">supported scheme</a> for that part it seems.</li>
+<li>the request for the schema over the network uses <a href="https://github.com/mission-liao/pyswagger/blob/cff50d0b49da984666e1a350cff3e7bdf71d0b13/pyswagger/getter.py#L136"><code>urllib.urlopen</code> rather than <code>requests</code></a> so I couldn&rsquo;t easily intercept it with <code>responses</code> and would have to do more mocking of the deep internals of <code>pyswagger</code>, which seemed wrong.</li>
 </ul>
 <p>Lots of trial-and-error and reading of the <code>pyswagger</code> source later I found the solution in the <a href="https://github.com/mission-liao/pyswagger/blob/cff50d0b49da984666e1a350cff3e7bdf71d0b13/pyswagger/tests/contrib/client/test_requests.py#L28">tests of the client in <code>pyswagger</code> itself</a>. They were doing exactly what I was trying in the first bullet above - loading in the schema from file then intercepting API requests - so why were their API requests working? It turns out their schema had two entries not added by <code>Flask-RESTPlus</code> - <a href="https://github.com/mission-liao/pyswagger/blob/cff50d0b49da984666e1a350cff3e7bdf71d0b13/pyswagger/tests/data/v2_0/wordnik/swagger.json#L16"><code>host</code></a> and <a href="https://github.com/mission-liao/pyswagger/blob/cff50d0b49da984666e1a350cff3e7bdf71d0b13/pyswagger/tests/data/v2_0/wordnik/swagger.json#L40"><code>schemes</code></a>.</p>
 <p>So I just needed this in top level of my schema saved in a file for the tests:</p>
@@ -151,7 +151,7 @@
 <p>Once I had wasted far too long trying to get a test working, everything else was straightforward, basically just following the <a href="https://github.com/mission-liao/pyswagger#tutorial">tutorials linked in the <code>pyswagger</code> readme</a>.</p>
 <p>When you have loaded in the schema to <code>pyswagger</code>, you just reference API calls by name in the schema, which <code>Flask-RESTPlus</code> auto-generates from the class names you give to resources, and you can rename if you want - details of both of those bits of logic <a href="https://flask-restplus.readthedocs.io/en/stable/swagger.html#documenting-the-methods">here</a>. <code>pyswagger</code> makes sure you pass in all the right arguments in the right format, so if you have models in the schema you pretty much have to use the API correctly or any attempts will be rejected, which is great for catching bugs early.</p>
 <h2 id="result">Result</h2>
-<p>Here's the project - <a href="https://github.com/olipratt/microcarddeck">microcarddeck</a>. I didn't end up implementing much function because I didn't need to - I got to exercise the <code>pyswagger</code> package and get a feel for how to use it, and got a good simple bit of reference code to crib from in the future.</p>
+<p>Here&rsquo;s the project - <a href="https://github.com/olipratt/microcarddeck">microcarddeck</a>. I didn&rsquo;t end up implementing much function because I didn&rsquo;t need to - I got to exercise the <code>pyswagger</code> package and get a feel for how to use it, and got a good simple bit of reference code to crib from in the future.</p>
   </div>
   <div class="tag-cloud">
     <p>

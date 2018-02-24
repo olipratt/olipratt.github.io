@@ -8,7 +8,11 @@
 &lt;p&gt;These extensions require &lt;code&gt;Node.js&lt;/code&gt; and &lt;code&gt;npm&lt;/code&gt; installed, which you might not want to install locally - especially &lt;a href="https://www.bleepingcomputer.com/news/linux/botched-npm-update-crashes-linux-systems-forces-users-to-reinstall/"&gt;given recent, scary issues&lt;/a&gt;.&lt;/p&gt;
 &lt;/li&gt;
 &lt;li&gt;
-&lt;p&gt;Instead, using the &lt;code&gt;Dockerfile&lt;/code&gt; and commands below, you can build extensions inside a …&lt;/p&gt;&lt;/li&gt;&lt;/ul&gt;</summary><content type="html">&lt;h4 id="tldr"&gt;TL;DR&lt;/h4&gt;
+&lt;p&gt;Instead, using the &lt;code&gt;Dockerfile&lt;/code&gt; and commands below, you can build extensions inside a Docker container and still test and run them inside the VS Code installation on the same machine without Node installed.&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="background"&gt;Background&lt;/h2&gt;
+&lt;p&gt;I&amp;rsquo;ve been using …&lt;/p&gt;</summary><content type="html">&lt;h4 id="tldr"&gt;TL;DR&lt;/h4&gt;
 &lt;ul&gt;
 &lt;li&gt;
 &lt;p&gt;&lt;a href="https://code.visualstudio.com/"&gt;VS Code&lt;/a&gt; is an editor that allows you to &lt;a href="https://code.visualstudio.com/docs/extensions/example-hello-world"&gt;write&lt;/a&gt; and &lt;a href="https://marketplace.visualstudio.com/"&gt;share&lt;/a&gt; custom extensions.&lt;/p&gt;
@@ -21,12 +25,12 @@
 &lt;/li&gt;
 &lt;/ul&gt;
 &lt;h2 id="background"&gt;Background&lt;/h2&gt;
-&lt;p&gt;I've been using VS Code as my main editor for personal work for some time now, but only just got around to trying to create an extension.&lt;/p&gt;
-&lt;p&gt;I don't do any Node or Javascript development normally, so don't have Node/NPM installed, and &lt;a href="https://code.visualstudio.com/docs/extensions/example-hello-world"&gt;that's the first thing the docs tell you to do&lt;/a&gt;.
-Keen not to install these on my system given the bloat I've heard they add and &lt;a href="https://www.bleepingcomputer.com/news/linux/botched-npm-update-crashes-linux-systems-forces-users-to-reinstall/"&gt;recent issues&lt;/a&gt;, I wanted to do try and do the necessary generation and building in a container.&lt;/p&gt;
-&lt;p&gt;Searching online for various combinations of relevant keywords only seemed to give me articles on writing extensions to work with Docker files/containers, and I had to poke about and get this working myself. I thought I'd write up how I did it in case it's useful for someone else.&lt;/p&gt;
+&lt;p&gt;I&amp;rsquo;ve been using VS Code as my main editor for personal work for some time now, but only just got around to trying to create an extension.&lt;/p&gt;
+&lt;p&gt;I don&amp;rsquo;t do any Node or Javascript development normally, so don&amp;rsquo;t have Node/NPM installed, and &lt;a href="https://code.visualstudio.com/docs/extensions/example-hello-world"&gt;that&amp;rsquo;s the first thing the docs tell you to do&lt;/a&gt;.
+Keen not to install these on my system given the bloat I&amp;rsquo;ve heard they add and &lt;a href="https://www.bleepingcomputer.com/news/linux/botched-npm-update-crashes-linux-systems-forces-users-to-reinstall/"&gt;recent issues&lt;/a&gt;, I wanted to do try and do the necessary generation and building in a container.&lt;/p&gt;
+&lt;p&gt;Searching online for various combinations of relevant keywords only seemed to give me articles on writing extensions to work with Docker files/containers, and I had to poke about and get this working myself. I thought I&amp;rsquo;d write up how I did it in case it&amp;rsquo;s useful for someone else.&lt;/p&gt;
 &lt;h2 id="getting-started"&gt;Getting Started&lt;/h2&gt;
-&lt;p&gt;Obviously you'll need docker installed and set up.&lt;/p&gt;
+&lt;p&gt;Obviously you&amp;rsquo;ll need docker installed and set up.&lt;/p&gt;
 &lt;p&gt;Then the following &lt;code&gt;Dockerfile&lt;/code&gt; will allow you to create a container with the VS Code extension generator ready and installed.&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;FROM&lt;/span&gt;&lt;span class="s"&gt; node:latest&lt;/span&gt;
 
@@ -56,16 +60,16 @@ sudo docker run -it &lt;span class="se"&gt;\&lt;/span&gt;
 &lt;p&gt;&lt;strong&gt;&lt;em&gt;Gotcha:&lt;/em&gt;&lt;/strong&gt; &lt;em&gt;I found out that &lt;a href="https://docs.docker.com/storage/volumes/"&gt;docker now recommends&lt;/a&gt; you use &lt;code&gt;--mount&lt;/code&gt; to mount directories inside a container rather than &lt;code&gt;-v&lt;/code&gt;, but using that ended up with the mounted directory inside the container being owned by root until I added &lt;code&gt;type=bind&lt;/code&gt; to the &lt;code&gt;mount&lt;/code&gt; option.&lt;/em&gt;&lt;/p&gt;
 &lt;h2 id="building-the-extension"&gt;Building the Extension&lt;/h2&gt;
 &lt;p&gt;Here you can just run the extension generator with &lt;code&gt;yo code&lt;/code&gt; and follow the prompts. I named mine example, and just used dummy values for everything else. Like a good developer I also turned on all the linting 😉.&lt;/p&gt;
-&lt;p&gt;Once it's generated, &lt;a href="https://code.visualstudio.com/docs/extensions/example-hello-world#_running-your-extension"&gt;the docs&lt;/a&gt; say to start debugging the extension, but from what I can tell that first builds the extension, which won't work since we don't have all the dependencies installed. If I try, I get a few errors/stack traces in the debug console and this notification in the original VS Code instance&lt;/p&gt;
+&lt;p&gt;Once it&amp;rsquo;s generated, &lt;a href="https://code.visualstudio.com/docs/extensions/example-hello-world#_running-your-extension"&gt;the docs&lt;/a&gt; say to start debugging the extension, but from what I can tell that first builds the extension, which won&amp;rsquo;t work since we don&amp;rsquo;t have all the dependencies installed. If I try, I get a few errors/stack traces in the debug console and this notification in the original VS Code instance&lt;/p&gt;
 &lt;p&gt;&lt;img alt="Alt Text" src="/static/images/vscode_extension_debug_error.png"&gt;&lt;/p&gt;
-&lt;p&gt;The second instance that's supposed to have the extension loaded does open, but doesn't have it loaded in.&lt;/p&gt;
+&lt;p&gt;The second instance that&amp;rsquo;s supposed to have the extension loaded does open, but doesn&amp;rsquo;t have it loaded in.&lt;/p&gt;
 &lt;p&gt;So we need to build it manually first.&lt;/p&gt;
-&lt;p&gt;This might be obvious if you're a proficient &lt;code&gt;node&lt;/code&gt; developer, but after some poking through the generated files I found the command - in the container, run:&lt;/p&gt;
+&lt;p&gt;This might be obvious if you&amp;rsquo;re a proficient &lt;code&gt;node&lt;/code&gt; developer, but after some poking through the generated files I found the command - in the container, run:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;npm run compile
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;p&gt;You'll now have an &lt;code&gt;out&lt;/code&gt; directory, which is what VS Code needs.&lt;/p&gt;
+&lt;p&gt;You&amp;rsquo;ll now have an &lt;code&gt;out&lt;/code&gt; directory, which is what VS Code needs.&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;&lt;em&gt;Gotcha:&lt;/em&gt;&lt;/strong&gt; &lt;em&gt;For me the &lt;code&gt;compile&lt;/code&gt; command failed with an error I think because I enabled the various linting and strict options when generating the project - this is fixed for now by commenting these lines out in &lt;code&gt;src/test/extension.test.ts&lt;/code&gt;&lt;/em&gt;&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;// import * as vscode from &amp;#39;vscode&amp;#39;;&lt;/span&gt;
 &lt;span class="c1"&gt;// import * as myExtension from &amp;#39;../extension&amp;#39;;&lt;/span&gt;
@@ -74,7 +78,7 @@ sudo docker run -it &lt;span class="se"&gt;\&lt;/span&gt;
 
 &lt;h2 id="testing-the-extension-in-vs-code"&gt;Testing the extension in VS Code&lt;/h2&gt;
 &lt;p&gt;&lt;em&gt;Now&lt;/em&gt; you should be able to, in VS Code, just open the &lt;code&gt;Debug&lt;/code&gt; tab and press the &lt;code&gt;Play&lt;/code&gt; button, and the new instance of VS Code with your app loaded should appear!&lt;/p&gt;
-&lt;p&gt;If you've just used the default app, then &lt;code&gt;Ctrl+Shift+P&lt;/code&gt; in the new instance should allow you to find the &lt;code&gt;hello world&lt;/code&gt; command, and running it should correctly show the notification.&lt;/p&gt;
+&lt;p&gt;If you&amp;rsquo;ve just used the default app, then &lt;code&gt;Ctrl+Shift+P&lt;/code&gt; in the new instance should allow you to find the &lt;code&gt;hello world&lt;/code&gt; command, and running it should correctly show the notification.&lt;/p&gt;
 &lt;p&gt;The only downsides are that:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;

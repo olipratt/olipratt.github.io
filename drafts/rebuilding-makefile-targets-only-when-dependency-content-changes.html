@@ -35,12 +35,12 @@
     <meta name="msapplication-TileColor" content="#282828">
 
 <meta name="author" content="Oli Pratt" />
-<meta name="description" content="TL;DR GNU Make decides whether to rebuild a &#39;target&#39; file based on the modification times of &#39;dependency&#39; files of the target. In some cases those dependencies&#39; modification times can change without the contents of the files changing, thus forcing an unnecessary rebuild. If make was to decide whether to …" />
+<meta name="description" content="TL;DR GNU Make decides whether to rebuild a ‘target’ file based on the modification times of ‘dependency’ files of the target. In some cases those dependencies’ modification times can change without the contents of the files changing, thus forcing an unnecessary rebuild. If make was to decide whether to rebuild by looking at the hash of the contents of the dependency files instead, it would only rebuild when the contents changed. I wrote a …" />
 <meta name="keywords" content="GNU Make, builds">
 
 <meta property="og:site_name" content="Oli Pratt"/>
 <meta property="og:title" content="Rebuilding Makefile Targets Only When Dependency Content Changes"/>
-<meta property="og:description" content="TL;DR GNU Make decides whether to rebuild a &#39;target&#39; file based on the modification times of &#39;dependency&#39; files of the target. In some cases those dependencies&#39; modification times can change without the contents of the files changing, thus forcing an unnecessary rebuild. If make was to decide whether to …"/>
+<meta property="og:description" content="TL;DR GNU Make decides whether to rebuild a ‘target’ file based on the modification times of ‘dependency’ files of the target. In some cases those dependencies’ modification times can change without the contents of the files changing, thus forcing an unnecessary rebuild. If make was to decide whether to rebuild by looking at the hash of the contents of the dependency files instead, it would only rebuild when the contents changed. I wrote a …"/>
 <meta property="og:locale" content="en_GB"/>
 <meta property="og:url" content="http://olipratt.co.uk/drafts/rebuilding-makefile-targets-only-when-dependency-content-changes.html"/>
 <meta property="og:type" content="article"/>
@@ -113,10 +113,10 @@
     <h4 id="tldr">TL;DR</h4>
 <ul>
 <li>
-<p>GNU Make decides whether to rebuild a 'target' file based on the modification times of 'dependency' files of the target.</p>
+<p>GNU Make decides whether to rebuild a &lsquo;target&rsquo; file based on the modification times of &lsquo;dependency&rsquo; files of the target.</p>
 </li>
 <li>
-<p>In some cases those dependencies' modification times can change <em>without</em> the contents of the files changing, thus forcing an unnecessary rebuild.</p>
+<p>In some cases those dependencies&rsquo; modification times can change <em>without</em> the contents of the files changing, thus forcing an unnecessary rebuild.</p>
 </li>
 <li>
 <p>If <code>make</code> was to decide whether to rebuild by looking at the hash of the contents of the dependency files instead, it would only rebuild when the contents changed.</p>

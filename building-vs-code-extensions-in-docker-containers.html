@@ -35,12 +35,12 @@
     <meta name="msapplication-TileColor" content="#282828">
 
 <meta name="author" content="Oli Pratt" />
-<meta name="description" content="TL;DR VS Code is an editor that allows you to write and share custom extensions. These extensions require Node.js and npm installed, which you might not want to install locally - especially given recent, scary issues. Instead, using the Dockerfile and commands below, you can build extensions inside a …" />
+<meta name="description" content="TL;DR VS Code is an editor that allows you to write and share custom extensions. These extensions require Node.js and npm installed, which you might not want to install locally - especially given recent, scary issues. Instead, using the Dockerfile and commands below, you can build extensions inside a Docker container and still test and run them inside the VS Code installation on the same machine without Node installed. Background I’ve been using …" />
 <meta name="keywords" content="VS Code, Docker">
 
 <meta property="og:site_name" content="Oli Pratt"/>
 <meta property="og:title" content="Building VS Code Extensions in Docker Containers"/>
-<meta property="og:description" content="TL;DR VS Code is an editor that allows you to write and share custom extensions. These extensions require Node.js and npm installed, which you might not want to install locally - especially given recent, scary issues. Instead, using the Dockerfile and commands below, you can build extensions inside a …"/>
+<meta property="og:description" content="TL;DR VS Code is an editor that allows you to write and share custom extensions. These extensions require Node.js and npm installed, which you might not want to install locally - especially given recent, scary issues. Instead, using the Dockerfile and commands below, you can build extensions inside a Docker container and still test and run them inside the VS Code installation on the same machine without Node installed. Background I’ve been using …"/>
 <meta property="og:locale" content="en_GB"/>
 <meta property="og:url" content="http://olipratt.co.uk/building-vs-code-extensions-in-docker-containers.html"/>
 <meta property="og:type" content="article"/>
@@ -123,12 +123,12 @@
 </li>
 </ul>
 <h2 id="background">Background</h2>
-<p>I've been using VS Code as my main editor for personal work for some time now, but only just got around to trying to create an extension.</p>
-<p>I don't do any Node or Javascript development normally, so don't have Node/NPM installed, and <a href="https://code.visualstudio.com/docs/extensions/example-hello-world">that's the first thing the docs tell you to do</a>.
-Keen not to install these on my system given the bloat I've heard they add and <a href="https://www.bleepingcomputer.com/news/linux/botched-npm-update-crashes-linux-systems-forces-users-to-reinstall/">recent issues</a>, I wanted to do try and do the necessary generation and building in a container.</p>
-<p>Searching online for various combinations of relevant keywords only seemed to give me articles on writing extensions to work with Docker files/containers, and I had to poke about and get this working myself. I thought I'd write up how I did it in case it's useful for someone else.</p>
+<p>I&rsquo;ve been using VS Code as my main editor for personal work for some time now, but only just got around to trying to create an extension.</p>
+<p>I don&rsquo;t do any Node or Javascript development normally, so don&rsquo;t have Node/NPM installed, and <a href="https://code.visualstudio.com/docs/extensions/example-hello-world">that&rsquo;s the first thing the docs tell you to do</a>.
+Keen not to install these on my system given the bloat I&rsquo;ve heard they add and <a href="https://www.bleepingcomputer.com/news/linux/botched-npm-update-crashes-linux-systems-forces-users-to-reinstall/">recent issues</a>, I wanted to do try and do the necessary generation and building in a container.</p>
+<p>Searching online for various combinations of relevant keywords only seemed to give me articles on writing extensions to work with Docker files/containers, and I had to poke about and get this working myself. I thought I&rsquo;d write up how I did it in case it&rsquo;s useful for someone else.</p>
 <h2 id="getting-started">Getting Started</h2>
-<p>Obviously you'll need docker installed and set up.</p>
+<p>Obviously you&rsquo;ll need docker installed and set up.</p>
 <p>Then the following <code>Dockerfile</code> will allow you to create a container with the VS Code extension generator ready and installed.</p>
 <div class="highlight"><pre><span></span><span class="k">FROM</span><span class="s"> node:latest</span>
 
@@ -158,16 +158,16 @@ sudo docker run -it <span class="se">\</span>
 <p><strong><em>Gotcha:</em></strong> <em>I found out that <a href="https://docs.docker.com/storage/volumes/">docker now recommends</a> you use <code>--mount</code> to mount directories inside a container rather than <code>-v</code>, but using that ended up with the mounted directory inside the container being owned by root until I added <code>type=bind</code> to the <code>mount</code> option.</em></p>
 <h2 id="building-the-extension">Building the Extension</h2>
 <p>Here you can just run the extension generator with <code>yo code</code> and follow the prompts. I named mine example, and just used dummy values for everything else. Like a good developer I also turned on all the linting 😉.</p>
-<p>Once it's generated, <a href="https://code.visualstudio.com/docs/extensions/example-hello-world#_running-your-extension">the docs</a> say to start debugging the extension, but from what I can tell that first builds the extension, which won't work since we don't have all the dependencies installed. If I try, I get a few errors/stack traces in the debug console and this notification in the original VS Code instance</p>
+<p>Once it&rsquo;s generated, <a href="https://code.visualstudio.com/docs/extensions/example-hello-world#_running-your-extension">the docs</a> say to start debugging the extension, but from what I can tell that first builds the extension, which won&rsquo;t work since we don&rsquo;t have all the dependencies installed. If I try, I get a few errors/stack traces in the debug console and this notification in the original VS Code instance</p>
 <p><img alt="Alt Text" src="/static/images/vscode_extension_debug_error.png"></p>
-<p>The second instance that's supposed to have the extension loaded does open, but doesn't have it loaded in.</p>
+<p>The second instance that&rsquo;s supposed to have the extension loaded does open, but doesn&rsquo;t have it loaded in.</p>
 <p>So we need to build it manually first.</p>
-<p>This might be obvious if you're a proficient <code>node</code> developer, but after some poking through the generated files I found the command - in the container, run:</p>
+<p>This might be obvious if you&rsquo;re a proficient <code>node</code> developer, but after some poking through the generated files I found the command - in the container, run:</p>
 <div class="highlight"><pre><span></span>npm run compile
 </pre></div>
 
 
-<p>You'll now have an <code>out</code> directory, which is what VS Code needs.</p>
+<p>You&rsquo;ll now have an <code>out</code> directory, which is what VS Code needs.</p>
 <p><strong><em>Gotcha:</em></strong> <em>For me the <code>compile</code> command failed with an error I think because I enabled the various linting and strict options when generating the project - this is fixed for now by commenting these lines out in <code>src/test/extension.test.ts</code></em></p>
 <div class="highlight"><pre><span></span><span class="c1">// import * as vscode from &#39;vscode&#39;;</span>
 <span class="c1">// import * as myExtension from &#39;../extension&#39;;</span>
@@ -176,7 +176,7 @@ sudo docker run -it <span class="se">\</span>
 
 <h2 id="testing-the-extension-in-vs-code">Testing the extension in VS Code</h2>
 <p><em>Now</em> you should be able to, in VS Code, just open the <code>Debug</code> tab and press the <code>Play</code> button, and the new instance of VS Code with your app loaded should appear!</p>
-<p>If you've just used the default app, then <code>Ctrl+Shift+P</code> in the new instance should allow you to find the <code>hello world</code> command, and running it should correctly show the notification.</p>
+<p>If you&rsquo;ve just used the default app, then <code>Ctrl+Shift+P</code> in the new instance should allow you to find the <code>hello world</code> command, and running it should correctly show the notification.</p>
 <p>The only downsides are that:</p>
 <ul>
 <li>

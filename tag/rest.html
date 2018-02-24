@@ -103,14 +103,21 @@
     </p>
   </header>
   <div>
-      <p>After working to create a <a href="http://olipratt.co.uk/python-rest-api-with-swaggerui.html">REST API</a> and <a href="http://olipratt.co.uk/python-rest-api-client-adhering-to-a-swagger-schema.html">client</a> recently, here are some notes and resources I found useful. I'll keep adding to this as I find new info.</p>
+      <p>After working to create a <a href="http://olipratt.co.uk/python-rest-api-with-swaggerui.html">REST API</a> and <a href="http://olipratt.co.uk/python-rest-api-client-adhering-to-a-swagger-schema.html">client</a> recently, here are some notes and resources I found useful. I&rsquo;ll keep adding to this as I find new info.</p>
 <h4 id="general-notes">General notes</h4>
 <ul>
 <li>
 <p>Resource collection names should always be plural.</p>
 </li>
 <li>
-<p>Depending on who (client vs server) names resources, creation switches between <code>PUT …</code></p></li></ul>
+<p>Depending on who (client vs server) names resources, creation switches between <code>PUT</code>/<code>POST</code>:</p>
+<ul>
+<li>client names resources:<ul>
+<li><code>PUT /kittens/&lt;my_kittens_name&gt;</code> - creates a resource there</li>
+</ul>
+</li>
+<li>server names resources:<ul>
+<li><code>POST /things</code> - Creates a new <code>thing</code> at <code>/things/&lt;autogened_id&gt;</code>, with …</li></ul></li></ul></li></ul>
       <br>
       <a class="btn" href="http://olipratt.co.uk/rest-apis-notes-and-references.html#rest-apis-notes-and-references">    Continue reading
 </a>
@@ -130,7 +137,7 @@
   </header>
   <div>
       <p>After <a href="http://olipratt.co.uk/python-rest-api-with-swaggerui.html">building a REST API</a> I left it alone for a while before coming back to try and get a client working properly.</p>
-<p>Similar goals here to back then - find a good library to use going forwards that does the heavy lifting and make a simple example project. I chose …</p>
+<p>Similar goals here to back then - find a good library to use going forwards that does the heavy lifting and make a simple example project. I chose a simple microservice that provides an API for decks of playing cards - like a casino dealer type of thing - which would be a client of …</p>
       <br>
       <a class="btn" href="http://olipratt.co.uk/python-rest-api-client-adhering-to-a-swagger-schema.html#python-rest-api-client-adhering-to-a-swagger-schema">    Continue reading
 </a>
@@ -149,7 +156,10 @@
     </p>
   </header>
   <div>
-      <p>What with REST APIs and the <a href="http://swagger.io/">swagger</a> framework for documenting and integrating them being the in-thing lately, to start getting to grips with them I wanted to see how easy it would be to create a simple one in Python with minimal code from me. Turns out it was very …</p>
+      <p>What with REST APIs and the <a href="http://swagger.io/">swagger</a> framework for documenting and integrating them being the in-thing lately, to start getting to grips with them I wanted to see how easy it would be to create a simple one in Python with minimal code from me. Turns out it was very simple.</p>
+<p>As practice project I picked writing a really simple datastore.</p>
+<h2 id="choosing-a-package">Choosing a Package</h2>
+<p>After looking around for something that provides a SwaggerUI (<a href="http://petstore.swagger.io/">demo here …</a></p>
       <br>
       <a class="btn" href="http://olipratt.co.uk/python-rest-api-with-swaggerui.html#python-rest-api-with-swaggerui">    Continue reading
 </a>

@@ -1,31 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom"><title>Oli Pratt - Performance</title><link href="http://olipratt.co.uk/" rel="alternate"></link><link href="http://olipratt.co.uk/feeds/performance.atom.xml" rel="self"></link><id>http://olipratt.co.uk/</id><updated>2016-11-19T12:28:00+00:00</updated><entry><title>The C++ Short String Optimisation</title><link href="http://olipratt.co.uk/the-cpp-short-string-optimisation.html" rel="alternate"></link><published>2016-11-19T12:28:00+00:00</published><updated>2016-11-19T12:28:00+00:00</updated><author><name>Oli Pratt</name></author><id>tag:olipratt.co.uk,2016-11-19:/the-cpp-short-string-optimisation.html</id><summary type="html">&lt;p&gt;While learning and reading up on C++11 recently, I came across the Short String Optimisation.&lt;/p&gt;
-&lt;p&gt;I'd at some point been told (or somehow got it into my head), that C &lt;code&gt;union&lt;/code&gt;s are generally dangerous and are something you should steer well clear of, so I'd never really known …&lt;/p&gt;</summary><content type="html">&lt;p&gt;While learning and reading up on C++11 recently, I came across the Short String Optimisation.&lt;/p&gt;
-&lt;p&gt;I'd at some point been told (or somehow got it into my head), that C &lt;code&gt;union&lt;/code&gt;s are generally dangerous and are something you should steer well clear of, so I'd never really known what they were about. However, from learning about the SSO it's clear they can make for some very efficient memory use as long as you are careful. (If you're familiar with &lt;code&gt;union&lt;/code&gt;s this whole thing will probably be underwhelming!).&lt;/p&gt;
-&lt;p&gt;I'll attempt an explanation here in my own words so I can make sure I understand the topic.&lt;/p&gt;
+&lt;p&gt;I&amp;rsquo;d at some point been told (or somehow got it into my head), that C &lt;code&gt;union&lt;/code&gt;s are generally dangerous and are something you should steer well clear of, so I&amp;rsquo;d never really known what they were about. However, from learning about the SSO it&amp;rsquo;s clear they can make for some very efficient memory use as …&lt;/p&gt;</summary><content type="html">&lt;p&gt;While learning and reading up on C++11 recently, I came across the Short String Optimisation.&lt;/p&gt;
+&lt;p&gt;I&amp;rsquo;d at some point been told (or somehow got it into my head), that C &lt;code&gt;union&lt;/code&gt;s are generally dangerous and are something you should steer well clear of, so I&amp;rsquo;d never really known what they were about. However, from learning about the SSO it&amp;rsquo;s clear they can make for some very efficient memory use as long as you are careful. (If you&amp;rsquo;re familiar with &lt;code&gt;union&lt;/code&gt;s this whole thing will probably be underwhelming!).&lt;/p&gt;
+&lt;p&gt;I&amp;rsquo;ll attempt an explanation here in my own words so I can make sure I understand the topic.&lt;/p&gt;
 &lt;h2 id="deriving-the-sso"&gt;Deriving the SSO&lt;/h2&gt;
 &lt;h3 id="baby-steps"&gt;Baby Steps&lt;/h3&gt;
-&lt;p&gt;Let's try and implement a C++ &lt;code&gt;string&lt;/code&gt; class, and be as memory and processor efficient as we can. Assuming a 64-bit system, we'll need at least:&lt;/p&gt;
+&lt;p&gt;Let&amp;rsquo;s try and implement a C++ &lt;code&gt;string&lt;/code&gt; class, and be as memory and processor efficient as we can. Assuming a 64-bit system, we&amp;rsquo;ll need at least:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;A &lt;code&gt;char *string&lt;/code&gt; pointer to the string - the string itself will have to be on the heap somewhere as it can be arbitrarily large,&lt;/li&gt;
 &lt;li&gt;A &lt;code&gt;uint64_t length&lt;/code&gt; - again allowing for arbitrary largeness.&lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;That's pretty good so far, only 16 bytes used and we can manage arbitrarily large strings.&lt;/p&gt;
+&lt;p&gt;That&amp;rsquo;s pretty good so far, only 16 bytes used and we can manage arbitrarily large strings.&lt;/p&gt;
 &lt;h3 id="minimising-reallocation"&gt;Minimising Reallocation&lt;/h3&gt;
-&lt;p&gt;Now imagine we're working with a string, and appending &lt;code&gt;char&lt;/code&gt;s to it to build some bigger string, one-by-one. That means each time one is appended, we have to &lt;code&gt;realloc&lt;/code&gt; our string, which may well mean a &lt;code&gt;malloc&lt;/code&gt; of new memory, a &lt;code&gt;memcpy&lt;/code&gt; of the whole string, and a &lt;code&gt;free&lt;/code&gt; of the old string. That's far from ideal, so lets add one more field:&lt;/p&gt;
+&lt;p&gt;Now imagine we&amp;rsquo;re working with a string, and appending &lt;code&gt;char&lt;/code&gt;s to it to build some bigger string, one-by-one. That means each time one is appended, we have to &lt;code&gt;realloc&lt;/code&gt; our string, which may well mean a &lt;code&gt;malloc&lt;/code&gt; of new memory, a &lt;code&gt;memcpy&lt;/code&gt; of the whole string, and a &lt;code&gt;free&lt;/code&gt; of the old string. That&amp;rsquo;s far from ideal, so lets add one more field:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;A &lt;code&gt;uint64_t allocated_length&lt;/code&gt; - this will separately store the size of any allocated memory, meaning we can, for example, double the amount of memory allocated when we run out, to achieve &lt;a href="https://en.wikipedia.org/wiki/Dynamic_array#Geometric_expansion_and_amortized_cost"&gt;amortised constant time cost&lt;/a&gt;.&lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;Cool, we're up to 24 bytes now and can handle large strings pretty optimally.&lt;/p&gt;
-&lt;h3 id="wasnt-this-about-short-strings"&gt;Wasn't This About Short Strings?&lt;/h3&gt;
-&lt;p&gt;What about small strings though? If I create only a little string &lt;code&gt;Hello world!&lt;/code&gt;, I have to allocate some memory on the heap to hold it. Going further, say I create an array of several two character strings, every single one has to separately allocate and later free memory. That's not great, so lets try and improve it.&lt;/p&gt;
+&lt;p&gt;Cool, we&amp;rsquo;re up to 24 bytes now and can handle large strings pretty optimally.&lt;/p&gt;
+&lt;h3 id="wasnt-this-about-short-strings"&gt;Wasn&amp;rsquo;t This About Short Strings?&lt;/h3&gt;
+&lt;p&gt;What about small strings though? If I create only a little string &lt;code&gt;Hello world!&lt;/code&gt;, I have to allocate some memory on the heap to hold it. Going further, say I create an array of several two character strings, every single one has to separately allocate and later free memory. That&amp;rsquo;s not great, so lets try and improve it.&lt;/p&gt;
 &lt;p&gt;We could add a small array to our string class that we use for small strings - say something like:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;A &lt;code&gt;char short_string[16]&lt;/code&gt; - any 16 byte or shorter string gets put in here.&lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;But then, every string class instance gets 16 bytes bigger, whether it needs it or not, and the space is completely useless for long strings (unless we split them across this array and any allocated memory, but then the string's not contiguous in memory and that's going to make it useless to any number of standard functions that expect that).&lt;/p&gt;
-&lt;p&gt;So let's not do that - but notice if we did, when the array was in use the &lt;code&gt;char *string&lt;/code&gt; and &lt;code&gt;uint64_t allocated_length&lt;/code&gt; would be useless, and they would be wasted instead...&lt;/p&gt;
-&lt;p&gt;Here's where the &lt;code&gt;union&lt;/code&gt; steps in - lets define our string class&lt;sup id="fnref-1"&gt;&lt;a class="footnote-ref" href="#fn-1"&gt;1&lt;/a&gt;&lt;/sup&gt; as:&lt;/p&gt;
+&lt;p&gt;But then, every string class instance gets 16 bytes bigger, whether it needs it or not, and the space is completely useless for long strings (unless we split them across this array and any allocated memory, but then the string&amp;rsquo;s not contiguous in memory and that&amp;rsquo;s going to make it useless to any number of standard functions that expect that).&lt;/p&gt;
+&lt;p&gt;So let&amp;rsquo;s not do that - but notice if we did, when the array was in use the &lt;code&gt;char *string&lt;/code&gt; and &lt;code&gt;uint64_t allocated_length&lt;/code&gt; would be useless, and they would be wasted instead&amp;hellip;&lt;/p&gt;
+&lt;p&gt;Here&amp;rsquo;s where the &lt;code&gt;union&lt;/code&gt; steps in - lets define our string class&lt;sup id="fnref-1"&gt;&lt;a class="footnote-ref" href="#fn-1"&gt;1&lt;/a&gt;&lt;/sup&gt; as:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;string&lt;/span&gt;
 &lt;span class="p"&gt;{&lt;/span&gt;
   &lt;span class="kt"&gt;uint64_t&lt;/span&gt; &lt;span class="n"&gt;length&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;  &lt;span class="c1"&gt;// The real string length.&lt;/span&gt;
@@ -42,14 +42,14 @@
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;p&gt;That's a common 8 byte length of the actual string, and then an either-or of:&lt;/p&gt;
+&lt;p&gt;That&amp;rsquo;s a common 8 byte length of the actual string, and then an either-or of:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;pointer-to-string and allocated length&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;char&lt;/code&gt; array of the same size as the above takes up - 16 bytes here.&lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;Now if our string is 16 characters or shorter, we can pack it directly into the memory of the string class itself, and if it's longer, we treat the union as a pointer and length and store the string there instead!&lt;/p&gt;
-&lt;h3 id="but-wait-theres-more"&gt;But Wait, There's More&lt;/h3&gt;
-&lt;p&gt;In the case above that we're using the short string buffer, the largest length we need to store is going to be 15 (assuming the string is stored null-terminated), so the &lt;code&gt;uint64_t&lt;/code&gt; is overkill. Let's try turning the whole thing into one big &lt;code&gt;union&lt;/code&gt;, using only a single byte to store the length in the short case:&lt;/p&gt;
+&lt;p&gt;Now if our string is 16 characters or shorter, we can pack it directly into the memory of the string class itself, and if it&amp;rsquo;s longer, we treat the union as a pointer and length and store the string there instead!&lt;/p&gt;
+&lt;h3 id="but-wait-theres-more"&gt;But Wait, There&amp;rsquo;s More&lt;/h3&gt;
+&lt;p&gt;In the case above that we&amp;rsquo;re using the short string buffer, the largest length we need to store is going to be 15 (assuming the string is stored null-terminated), so the &lt;code&gt;uint64_t&lt;/code&gt; is overkill. Let&amp;rsquo;s try turning the whole thing into one big &lt;code&gt;union&lt;/code&gt;, using only a single byte to store the length in the short case:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;string&lt;/span&gt;
 &lt;span class="p"&gt;{&lt;/span&gt;
   &lt;span class="k"&gt;union&lt;/span&gt;
@@ -70,22 +70,22 @@
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;p&gt;Great, now our short string can be 23 bytes long, but there's one problem - how do we know which type to treat the &lt;code&gt;union&lt;/code&gt; as when using this class?&lt;/p&gt;
-&lt;p&gt;To solve this, we can take advantage of the fact that in the short case we need only about 5 bits to store the length, and  &lt;em&gt;surely&lt;/em&gt; no-one will mind if we limit them to a paltry &lt;code&gt;2^63&lt;/code&gt;&lt;sup id="fnref-2"&gt;&lt;a class="footnote-ref" href="#fn-2"&gt;2&lt;/a&gt;&lt;/sup&gt; byte string, so lets steal the high bit&lt;sup id="fnref-3"&gt;&lt;a class="footnote-ref" href="#fn-3"&gt;3&lt;/a&gt;&lt;/sup&gt; from the length to act as a flag for whether we're treating the union one way or the other.&lt;/p&gt;
+&lt;p&gt;Great, now our short string can be 23 bytes long, but there&amp;rsquo;s one problem - how do we know which type to treat the &lt;code&gt;union&lt;/code&gt; as when using this class?&lt;/p&gt;
+&lt;p&gt;To solve this, we can take advantage of the fact that in the short case we need only about 5 bits to store the length, and  &lt;em&gt;surely&lt;/em&gt; no-one will mind if we limit them to a paltry &lt;code&gt;2^63&lt;/code&gt;&lt;sup id="fnref-2"&gt;&lt;a class="footnote-ref" href="#fn-2"&gt;2&lt;/a&gt;&lt;/sup&gt; byte string, so lets steal the high bit&lt;sup id="fnref-3"&gt;&lt;a class="footnote-ref" href="#fn-3"&gt;3&lt;/a&gt;&lt;/sup&gt; from the length to act as a flag for whether we&amp;rsquo;re treating the union one way or the other.&lt;/p&gt;
 &lt;h3 id="squeezing-out-the-last-drops"&gt;Squeezing Out the Last Drops&lt;/h3&gt;
-&lt;p&gt;There's one final thing we can tweak to do better. As it stands, swapping back and forth from a 23 byte to a 24 byte string means allocating a string and copying into it one way, and then copying back and freeing it the other. Instead once we allocate a string and set the bit flag, we can just never unset it - so when a string shrinks to 23 bytes or less, we just continue using the allocated space.&lt;/p&gt;
-&lt;p&gt;And that's how we can use just 24 bytes of space to point to arbitrarily long strings &lt;em&gt;and&lt;/em&gt; still store 23 byte strings without having to allocate any extra memory!&lt;/p&gt;
+&lt;p&gt;There&amp;rsquo;s one final thing we can tweak to do better. As it stands, swapping back and forth from a 23 byte to a 24 byte string means allocating a string and copying into it one way, and then copying back and freeing it the other. Instead once we allocate a string and set the bit flag, we can just never unset it - so when a string shrinks to 23 bytes or less, we just continue using the allocated space.&lt;/p&gt;
+&lt;p&gt;And that&amp;rsquo;s how we can use just 24 bytes of space to point to arbitrarily long strings &lt;em&gt;and&lt;/em&gt; still store 23 byte strings without having to allocate any extra memory!&lt;/p&gt;
 &lt;div class="footnote"&gt;
 &lt;hr&gt;
 &lt;ol&gt;
 &lt;li id="fn-1"&gt;
-&lt;p&gt;I'm not claiming that any real implementations look exactly like any of the ones in this post - but it gives an illustrative idea. &lt;a href="https://github.com/elliotgoodrich/SSO-23"&gt;Here's a real implementation, with some good explanatory diagrams&lt;/a&gt;.&amp;#160;&lt;a class="footnote-backref" href="#fnref-1" title="Jump back to footnote 1 in the text"&gt;&amp;#8617;&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;I&amp;rsquo;m not claiming that any real implementations look exactly like any of the ones in this post - but it gives an illustrative idea. &lt;a href="https://github.com/elliotgoodrich/SSO-23"&gt;Here&amp;rsquo;s a real implementation, with some good explanatory diagrams&lt;/a&gt;.&amp;#160;&lt;a class="footnote-backref" href="#fnref-1" title="Jump back to footnote 1 in the text"&gt;&amp;#8617;&lt;/a&gt;&lt;/p&gt;
 &lt;/li&gt;
 &lt;li id="fn-2"&gt;
-&lt;p&gt;Even modern 64 bit CPUs can't actually address the full 64 bit space - the current limit is about &lt;a href="http://www.howtogeek.com/175443/what-is-the-maximum-amount-of-ram-you-could-theoretically-put-in-a-64-bit-computer/"&gt;46 bits&lt;/a&gt; - so this isn't even a real limitation as it stands. (A limit that HP's search-engine-unagreeably-named "The Machine" is coming up against!)&amp;#160;&lt;a class="footnote-backref" href="#fnref-2" title="Jump back to footnote 2 in the text"&gt;&amp;#8617;&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Even modern 64 bit CPUs can&amp;rsquo;t actually address the full 64 bit space - the current limit is about &lt;a href="http://www.howtogeek.com/175443/what-is-the-maximum-amount-of-ram-you-could-theoretically-put-in-a-64-bit-computer/"&gt;46 bits&lt;/a&gt; - so this isn&amp;rsquo;t even a real limitation as it stands. (A limit that HP&amp;rsquo;s search-engine-unagreeably-named &amp;ldquo;The Machine&amp;rdquo; is coming up against!)&amp;#160;&lt;a class="footnote-backref" href="#fnref-2" title="Jump back to footnote 2 in the text"&gt;&amp;#8617;&lt;/a&gt;&lt;/p&gt;
 &lt;/li&gt;
 &lt;li id="fn-3"&gt;
-&lt;p&gt;Yes, I'm ignoring endianness for the purposes of this post.&amp;#160;&lt;a class="footnote-backref" href="#fnref-3" title="Jump back to footnote 3 in the text"&gt;&amp;#8617;&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Yes, I&amp;rsquo;m ignoring endianness for the purposes of this post.&amp;#160;&lt;a class="footnote-backref" href="#fnref-3" title="Jump back to footnote 3 in the text"&gt;&amp;#8617;&lt;/a&gt;&lt;/p&gt;
 &lt;/li&gt;
 &lt;/ol&gt;
 &lt;/div&gt;</content><category term="C++"></category><category term="optimisation"></category><category term="performance"></category></entry></feed>

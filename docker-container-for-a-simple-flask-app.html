@@ -35,12 +35,12 @@
     <meta name="msapplication-TileColor" content="#282828">
 
 <meta name="author" content="Oli Pratt" />
-<meta name="description" content="Continuing the recent microservices trend, I tried to containerise a previous project, a small REST datastore - microstore. I&#39;m not going to go into detail on what containers are (not least because I don&#39;t think I could!) - but briefly they are a way to package up an app and it&#39;s dependencies …" />
+<meta name="description" content="Continuing the recent microservices trend, I tried to containerise a previous project, a small REST datastore - microstore. I’m not going to go into detail on what containers are (not least because I don’t think I could!) - but briefly they are a way to package up an app and it’s dependencies so they can be run in their own mini-environment. The best intro is just to follow the tutorial here. Creating the Container …" />
 <meta name="keywords" content="Python, Flask, Container, Docker, microservice">
 
 <meta property="og:site_name" content="Oli Pratt"/>
 <meta property="og:title" content="Docker Container for a simple Flask App"/>
-<meta property="og:description" content="Continuing the recent microservices trend, I tried to containerise a previous project, a small REST datastore - microstore. I&#39;m not going to go into detail on what containers are (not least because I don&#39;t think I could!) - but briefly they are a way to package up an app and it&#39;s dependencies …"/>
+<meta property="og:description" content="Continuing the recent microservices trend, I tried to containerise a previous project, a small REST datastore - microstore. I’m not going to go into detail on what containers are (not least because I don’t think I could!) - but briefly they are a way to package up an app and it’s dependencies so they can be run in their own mini-environment. The best intro is just to follow the tutorial here. Creating the Container …"/>
 <meta property="og:locale" content="en_GB"/>
 <meta property="og:url" content="http://olipratt.co.uk/docker-container-for-a-simple-flask-app.html"/>
 <meta property="og:type" content="article"/>
@@ -114,11 +114,11 @@
 
   <div>
     <p>Continuing the recent microservices trend, I tried to containerise a previous project, a small REST datastore - <a href="http://olipratt.co.uk/python-rest-api-with-swaggerui.html">microstore</a>.</p>
-<p>I'm not going to go into detail on what containers are (not least because I don't think I could!) - but briefly they are a way to package up an app and it's dependencies so they can be run in their own mini-environment. The best intro is just to follow the tutorial <a href="https://docs.docker.com/engine/getstarted/">here</a>.</p>
+<p>I&rsquo;m not going to go into detail on what containers are (not least because I don&rsquo;t think I could!) - but briefly they are a way to package up an app and it&rsquo;s dependencies so they can be run in their own mini-environment. The best intro is just to follow the tutorial <a href="https://docs.docker.com/engine/getstarted/">here</a>.</p>
 <h2 id="creating-the-container">Creating the Container</h2>
 <p>I installed <a href="https://docs.docker.com/engine/installation/linux/centos/">Docker on CentOS</a>. It warns you not to just <code>yum install</code>, so instead I followed the <em>Install from a package</em> instructions - but note that you now have to always run docker commands with <code>sudo</code>.</p>
 <p>Containerising an app was simple - basically <a href="https://runnable.com/docker/python/dockerize-your-flask-application">just follow this tutorial</a>.</p>
-<p><a href="https://github.com/olipratt/microstore/blob/master/Dockerfile">Here's</a> the <code>Dockerfile</code> I created following that - now in the microstore repo.</p>
+<p><a href="https://github.com/olipratt/microstore/blob/master/Dockerfile">Here&rsquo;s</a> the <code>Dockerfile</code> I created following that - now in the microstore repo.</p>
 <p>Note I had to set the app to listen on <code>0.0.0.0</code> because we are going to forward ports to outside the container, so need to listen on a public address inside the container.</p>
 <p>So if you have docker installed, just:</p>
 <ul>
@@ -130,7 +130,7 @@
 So now you can just go to <code>http://127.0.0.1:5000/</code> in your web browser and you should see the SwaggerUI running!</p>
 <p>Some notes on running containers:</p>
 <ul>
-<li>If there's a problem building/running the app, you can just run the same commands again after fixing the problem.</li>
+<li>If there&rsquo;s a problem building/running the app, you can just run the same commands again after fixing the problem.</li>
 <li>Add the <code>-d</code> option to run the container in the background.</li>
 <li>Note <code>sudo docker ps</code> shows what containerised apps are running.</li>
 </ul>
@@ -138,19 +138,19 @@ So now you can just go to <code>http://127.0.0.1:5000/</code> in your web browse
 <p>You can now create the final container ready to ship with <code>sudo docker save microstore &gt; microstore.tar</code>. This one was about 300MB when I created it.</p>
 <p>Later/elsewhere you can reload it with <code>sudo docker load &lt; microstore.tar</code>.</p>
 <h2 id="composing-multiple-containers">Composing Multiple Containers</h2>
-<p>Now I'd got one running, I wanted to see how you'd ship several microservices given they would need to contact each other over IP somehow. Turns out that's simple too using <code>docker-compose</code>.</p>
-<p>Again, not going into detail on this as it's all online.</p>
+<p>Now I&rsquo;d got one running, I wanted to see how you&rsquo;d ship several microservices given they would need to contact each other over IP somehow. Turns out that&rsquo;s simple too using <code>docker-compose</code>.</p>
+<p>Again, not going into detail on this as it&rsquo;s all online.</p>
 <ul>
-<li>There's a good tutorial <a href="https://docs.docker.com/compose/gettingstarted/">here</a>.</li>
+<li>There&rsquo;s a good tutorial <a href="https://docs.docker.com/compose/gettingstarted/">here</a>.</li>
 <li>You may need to specify a <a href="https://docs.docker.com/compose/startup-order/">startup order</a> so that a service is created before another tries to connect to it.</li>
 <li>Networking between services is also simple - basically <a href="https://docs.docker.com/compose/networking/">access the name of a service in the compose file as a hostname</a>.</li>
 </ul>
 <p>I set up my little card deck service with a <a href="https://github.com/olipratt/microcarddeck/blob/master/Dockerfile">Dockerfile</a> and <a href="https://github.com/olipratt/microcarddeck/blob/master/docker-compose.yml">compose file</a> to run it and the microstore together. If you built the microstore container above, then by just running <code>sudo docker-compose up</code> in the card deck repo it will build the second image and then run them both together - magic!</p>
-<p><em>One note - I was confused that <code>sudo docker-compose up</code> didn't rebuild the image after fixing a bug in the <code>Dockerfile</code> but, as per <a href="https://github.com/docker/compose/issues/1487">here</a>, you need to run <code>sudo docker-compose build</code> to force it to rebuild - <code>up</code> won't ever rebuild.</em></p>
+<p><em>One note - I was confused that <code>sudo docker-compose up</code> didn&rsquo;t rebuild the image after fixing a bug in the <code>Dockerfile</code> but, as per <a href="https://github.com/docker/compose/issues/1487">here</a>, you need to run <code>sudo docker-compose build</code> to force it to rebuild - <code>up</code> won&rsquo;t ever rebuild.</em></p>
 <h2 id="tidying-up">Tidying up</h2>
 <p>Docker seems to leave images that you create as you iterate lying around, and you have to do a bit of manual cleanup at the end. As noted in <a href="https://docs.docker.com/compose/gettingstarted/">here</a> you can clear up composed containers with <code>sudo docker-compose down</code>. You can then <a href="https://docs.docker.com/engine/reference/commandline/image_prune/">prune</a> and <a href="https://docs.docker.com/engine/reference/commandline/rm/#/remove-all-stopped-containers">remove unused images</a>.</p>
 <hr>
-<p>That was really simple and Docker seems like a great way for running at least simple apps in a controlled environment. What's been your experience with Docker, if any?</p>
+<p>That was really simple and Docker seems like a great way for running at least simple apps in a controlled environment. What&rsquo;s been your experience with Docker, if any?</p>
   </div>
   <div class="tag-cloud">
     <p>

@@ -112,7 +112,11 @@
 <p>These extensions require <code>Node.js</code> and <code>npm</code> installed, which you might not want to install locally - especially <a href="https://www.bleepingcomputer.com/news/linux/botched-npm-update-crashes-linux-systems-forces-users-to-reinstall/">given recent, scary issues</a>.</p>
 </li>
 <li>
-<p>Instead, using the <code>Dockerfile</code> and commands below, you can build extensions inside a …</p></li></ul>
+<p>Instead, using the <code>Dockerfile</code> and commands below, you can build extensions inside a Docker container and still test and run them inside the VS Code installation on the same machine without Node installed.</p>
+</li>
+</ul>
+<h2 id="background">Background</h2>
+<p>I&rsquo;ve been using …</p>
       <br>
       <a class="btn" href="http://olipratt.co.uk/building-vs-code-extensions-in-docker-containers.html#building-vs-code-extensions-in-docker-containers">    Continue reading
 </a>
@@ -133,7 +137,8 @@
   <div>
         <img src="/static/images/docker_small_h.png">
       <p>Continuing the recent microservices trend, I tried to containerise a previous project, a small REST datastore - <a href="http://olipratt.co.uk/python-rest-api-with-swaggerui.html">microstore</a>.</p>
-<p>I'm not going to go into detail on what containers are (not least because I don't think I could!) - but briefly they are a way to package up an app and it's dependencies …</p>
+<p>I&rsquo;m not going to go into detail on what containers are (not least because I don&rsquo;t think I could!) - but briefly they are a way to package up an app and it&rsquo;s dependencies so they can be run in their own mini-environment. The best intro is just to follow the tutorial <a href="https://docs.docker.com/engine/getstarted/">here</a>.</p>
+<h2 id="creating-the-container">Creating the Container …</h2>
       <br>
       <a class="btn" href="http://olipratt.co.uk/docker-container-for-a-simple-flask-app.html#docker-container-for-a-simple-flask-app">    Continue reading
 </a>
@@ -152,7 +157,8 @@
     </p>
   </header>
   <div>
-      <p>After looking into <a href="http://olipratt.co.uk/python-rest-api-with-swaggerui.html">microservices</a> <a href="http://olipratt.co.uk/python-rest-api-client-adhering-to-a-swagger-schema.html">recently</a>, I was running multiple terminals and switching between them to look at logs as they are written to screen. This was a little awkward so I thought it was worth looking for the right way to log to a central location from multiple microservices. Ideally …</p>
+      <p>After looking into <a href="http://olipratt.co.uk/python-rest-api-with-swaggerui.html">microservices</a> <a href="http://olipratt.co.uk/python-rest-api-client-adhering-to-a-swagger-schema.html">recently</a>, I was running multiple terminals and switching between them to look at logs as they are written to screen. This was a little awkward so I thought it was worth looking for the right way to log to a central location from multiple microservices. Ideally I wanted do this just using the Python logging library, and without adding more dependencies to every service.</p>
+<p>This meant a lot of reading around …</p>
       <br>
       <a class="btn" href="http://olipratt.co.uk/python-microservice-logging.html#python-microservice-logging">    Continue reading
 </a>
@@ -171,14 +177,21 @@
     </p>
   </header>
   <div>
-      <p>After working to create a <a href="http://olipratt.co.uk/python-rest-api-with-swaggerui.html">REST API</a> and <a href="http://olipratt.co.uk/python-rest-api-client-adhering-to-a-swagger-schema.html">client</a> recently, here are some notes and resources I found useful. I'll keep adding to this as I find new info.</p>
+      <p>After working to create a <a href="http://olipratt.co.uk/python-rest-api-with-swaggerui.html">REST API</a> and <a href="http://olipratt.co.uk/python-rest-api-client-adhering-to-a-swagger-schema.html">client</a> recently, here are some notes and resources I found useful. I&rsquo;ll keep adding to this as I find new info.</p>
 <h4 id="general-notes">General notes</h4>
 <ul>
 <li>
 <p>Resource collection names should always be plural.</p>
 </li>
 <li>
-<p>Depending on who (client vs server) names resources, creation switches between <code>PUT …</code></p></li></ul>
+<p>Depending on who (client vs server) names resources, creation switches between <code>PUT</code>/<code>POST</code>:</p>
+<ul>
+<li>client names resources:<ul>
+<li><code>PUT /kittens/&lt;my_kittens_name&gt;</code> - creates a resource there</li>
+</ul>
+</li>
+<li>server names resources:<ul>
+<li><code>POST /things</code> - Creates a new <code>thing</code> at <code>/things/&lt;autogened_id&gt;</code>, with …</li></ul></li></ul></li></ul>
       <br>
       <a class="btn" href="http://olipratt.co.uk/rest-apis-notes-and-references.html#rest-apis-notes-and-references">    Continue reading
 </a>
@@ -198,7 +211,7 @@
   </header>
   <div>
       <p>After <a href="http://olipratt.co.uk/python-rest-api-with-swaggerui.html">building a REST API</a> I left it alone for a while before coming back to try and get a client working properly.</p>
-<p>Similar goals here to back then - find a good library to use going forwards that does the heavy lifting and make a simple example project. I chose …</p>
+<p>Similar goals here to back then - find a good library to use going forwards that does the heavy lifting and make a simple example project. I chose a simple microservice that provides an API for decks of playing cards - like a casino dealer type of thing - which would be a client of …</p>
       <br>
       <a class="btn" href="http://olipratt.co.uk/python-rest-api-client-adhering-to-a-swagger-schema.html#python-rest-api-client-adhering-to-a-swagger-schema">    Continue reading
 </a>
@@ -218,7 +231,7 @@
   </header>
   <div>
       <p>While learning and reading up on C++11 recently, I came across the Short String Optimisation.</p>
-<p>I'd at some point been told (or somehow got it into my head), that C <code>union</code>s are generally dangerous and are something you should steer well clear of, so I'd never really known …</p>
+<p>I&rsquo;d at some point been told (or somehow got it into my head), that C <code>union</code>s are generally dangerous and are something you should steer well clear of, so I&rsquo;d never really known what they were about. However, from learning about the SSO it&rsquo;s clear they can make for some very efficient memory use as …</p>
       <br>
       <a class="btn" href="http://olipratt.co.uk/the-cpp-short-string-optimisation.html#the-cpp-short-string-optimisation">    Continue reading
 </a>
