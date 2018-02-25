@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>Oli Pratt</title><link href="http://olipratt.co.uk/" rel="alternate"></link><link href="http://olipratt.co.uk/feeds/all.atom.xml" rel="self"></link><id>http://olipratt.co.uk/</id><updated>2018-02-23T19:52:00+00:00</updated><entry><title>Building VS Code Extensions in Docker Containers</title><link href="http://olipratt.co.uk/building-vs-code-extensions-in-docker-containers.html" rel="alternate"></link><published>2018-02-23T19:52:00+00:00</published><updated>2018-02-23T19:52:00+00:00</updated><author><name>Oli Pratt</name></author><id>tag:olipratt.co.uk,2018-02-23:/building-vs-code-extensions-in-docker-containers.html</id><summary type="html">&lt;h4 id="tldr"&gt;TL;DR&lt;/h4&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Oli Pratt</title><link href="http://olipratt.co.uk/" rel="alternate"></link><link href="http://olipratt.co.uk/feeds/all.atom.xml" rel="self"></link><id>http://olipratt.co.uk/</id><updated>2018-02-23T19:52:00+00:00</updated><entry><title>Building VS Code Extensions in Docker Containers</title><link href="http://olipratt.co.uk/building-vs-code-extensions-in-docker-containers.html" rel="alternate"></link><published>2018-02-23T19:52:00+00:00</published><updated>2018-02-23T19:52:00+00:00</updated><author><name>Oli Pratt</name></author><id>tag:olipratt.co.uk,2018-02-23:/building-vs-code-extensions-in-docker-containers.html</id><summary type="html">&lt;h4 id="tldr"&gt;TL;DR:&lt;/h4&gt;
 &lt;ul&gt;
 &lt;li&gt;
 &lt;p&gt;&lt;a href="https://code.visualstudio.com/"&gt;VS Code&lt;/a&gt; is an editor that allows you to &lt;a href="https://code.visualstudio.com/docs/extensions/example-hello-world"&gt;write&lt;/a&gt; and &lt;a href="https://marketplace.visualstudio.com/"&gt;share&lt;/a&gt; custom extensions.&lt;/p&gt;
@@ -12,7 +12,7 @@
 &lt;/li&gt;
 &lt;/ul&gt;
 &lt;h2 id="background"&gt;Background&lt;/h2&gt;
-&lt;p&gt;I&amp;rsquo;ve been using …&lt;/p&gt;</summary><content type="html">&lt;h4 id="tldr"&gt;TL;DR&lt;/h4&gt;
+&lt;p&gt;I&amp;rsquo;ve been using …&lt;/p&gt;</summary><content type="html">&lt;h4 id="tldr"&gt;TL;DR:&lt;/h4&gt;
 &lt;ul&gt;
 &lt;li&gt;
 &lt;p&gt;&lt;a href="https://code.visualstudio.com/"&gt;VS Code&lt;/a&gt; is an editor that allows you to &lt;a href="https://code.visualstudio.com/docs/extensions/example-hello-world"&gt;write&lt;/a&gt; and &lt;a href="https://marketplace.visualstudio.com/"&gt;share&lt;/a&gt; custom extensions.&lt;/p&gt;
