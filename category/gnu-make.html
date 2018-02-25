@@ -44,7 +44,8 @@
 <meta property="og:url" content="http://olipratt.co.uk"/>
 <meta property="og:image" content="/static/images/site_logo.png">
 
-  <title>Oli Pratt</title>
+  <title>Oli Pratt &ndash;     Category GNU Make
+</title>
 
 </head>
 <body>
@@ -92,51 +93,36 @@
 
 <article>
   <header>
-    <h2><a href="http://olipratt.co.uk/the-cpp-short-string-optimisation.html#the-cpp-short-string-optimisation">The C++ Short String Optimisation</a></h2>
+    <h2><a href="http://olipratt.co.uk/rebuilding-makefile-targets-only-when-dependency-content-changes.html#rebuilding-makefile-targets-only-when-dependency-content-changes">Rebuilding Makefile Targets Only When Dependency Content Changes</a></h2>
     <p>
-          Posted on Sat 19 November 2016 in <a href="http://olipratt.co.uk/category/performance.html">Performance</a>
+          Posted on Sun 25 February 2018 in <a href="http://olipratt.co.uk/category/gnu-make.html">GNU Make</a>
 
 
 
-        &#8226; 4 min read
+        &#8226; 6 min read
     </p>
   </header>
   <div>
-      <p>While learning and reading up on C++11 recently, I came across the Short String Optimisation.</p>
-<p>I&rsquo;d at some point been told (or somehow got it into my head), that C <code>union</code>s are generally dangerous and are something you should steer well clear of, so I&rsquo;d never really known what they were about. However, from learning about the SSO it&rsquo;s clear they can make for some very efficient memory use as …</p>
+      <h4 id="tldr">TL;DR:</h4>
+<ul>
+<li>
+<p>GNU Make decides whether to rebuild a &lsquo;target&rsquo; file based on the modification times of &lsquo;dependency&rsquo; files of the target.</p>
+</li>
+<li>
+<p>In some cases those dependencies&rsquo; modification times can change <em>without</em> the contents of the files changing, thus forcing an unnecessary rebuild.</p>
+</li>
+<li>
+<p>If <code>make</code> was to decide whether to rebuild by looking at the hash of the contents of the dependency files instead, it would only rebuild when the contents changed.</p>
+</li>
+<li>
+<p>I wrote a …</p></li></ul>
       <br>
-      <a class="btn" href="http://olipratt.co.uk/the-cpp-short-string-optimisation.html#the-cpp-short-string-optimisation">    Continue reading
-</a>
-  </div>
-  <hr />
-</article>
-<article>
-  <header>
-    <h2><a href="http://olipratt.co.uk/python-rest-api-with-swaggerui.html#python-rest-api-with-swaggerui">Python REST API With SwaggerUI</a></h2>
-    <p>
-          Posted on Sat 29 October 2016 in <a href="http://olipratt.co.uk/category/rest.html">REST</a>
-
-
-
-        &#8226; 3 min read
-    </p>
-  </header>
-  <div>
-      <p>What with REST APIs and the <a href="http://swagger.io/">swagger</a> framework for documenting and integrating them being the in-thing lately, to start getting to grips with them I wanted to see how easy it would be to create a simple one in Python with minimal code from me. Turns out it was very simple.</p>
-<p>As practice project I picked writing a really simple datastore.</p>
-<h2 id="choosing-a-package">Choosing a Package</h2>
-<p>After looking around for something that provides a SwaggerUI (<a href="http://petstore.swagger.io/">demo here …</a></p>
-      <br>
-      <a class="btn" href="http://olipratt.co.uk/python-rest-api-with-swaggerui.html#python-rest-api-with-swaggerui">    Continue reading
+      <a class="btn" href="http://olipratt.co.uk/rebuilding-makefile-targets-only-when-dependency-content-changes.html#rebuilding-makefile-targets-only-when-dependency-content-changes">    Continue reading
 </a>
   </div>
 </article>
 
   <div class="pagination">
-    <a class="btn float-right" href="http://olipratt.co.uk/index.html">
-          Newer Posts
- <i class="fa fa-angle-right"></i>
-    </a>
   </div>
 
 

@@ -92,6 +92,37 @@
 
 <article>
   <header>
+    <h2><a href="http://olipratt.co.uk/rebuilding-makefile-targets-only-when-dependency-content-changes.html#rebuilding-makefile-targets-only-when-dependency-content-changes">Rebuilding Makefile Targets Only When Dependency Content Changes</a></h2>
+    <p>
+          Posted on Sun 25 February 2018 in <a href="http://olipratt.co.uk/category/gnu-make.html">GNU Make</a>
+
+
+
+        &#8226; 6 min read
+    </p>
+  </header>
+  <div>
+      <h4 id="tldr">TL;DR:</h4>
+<ul>
+<li>
+<p>GNU Make decides whether to rebuild a &lsquo;target&rsquo; file based on the modification times of &lsquo;dependency&rsquo; files of the target.</p>
+</li>
+<li>
+<p>In some cases those dependencies&rsquo; modification times can change <em>without</em> the contents of the files changing, thus forcing an unnecessary rebuild.</p>
+</li>
+<li>
+<p>If <code>make</code> was to decide whether to rebuild by looking at the hash of the contents of the dependency files instead, it would only rebuild when the contents changed.</p>
+</li>
+<li>
+<p>I wrote a …</p></li></ul>
+      <br>
+      <a class="btn" href="http://olipratt.co.uk/rebuilding-makefile-targets-only-when-dependency-content-changes.html#rebuilding-makefile-targets-only-when-dependency-content-changes">    Continue reading
+</a>
+  </div>
+  <hr />
+</article>
+<article>
+  <header>
     <h2><a href="http://olipratt.co.uk/building-vs-code-extensions-in-docker-containers.html#building-vs-code-extensions-in-docker-containers">Building VS Code Extensions in Docker Containers</a></h2>
     <p>
           Posted on Fri 23 February 2018 in <a href="http://olipratt.co.uk/category/editors.html">Editors</a>
@@ -214,26 +245,6 @@
 <p>Similar goals here to back then - find a good library to use going forwards that does the heavy lifting and make a simple example project. I chose a simple microservice that provides an API for decks of playing cards - like a casino dealer type of thing - which would be a client of …</p>
       <br>
       <a class="btn" href="http://olipratt.co.uk/python-rest-api-client-adhering-to-a-swagger-schema.html#python-rest-api-client-adhering-to-a-swagger-schema">    Continue reading
-</a>
-  </div>
-  <hr />
-</article>
-<article>
-  <header>
-    <h2><a href="http://olipratt.co.uk/the-cpp-short-string-optimisation.html#the-cpp-short-string-optimisation">The C++ Short String Optimisation</a></h2>
-    <p>
-          Posted on Sat 19 November 2016 in <a href="http://olipratt.co.uk/category/performance.html">Performance</a>
-
-
-
-        &#8226; 4 min read
-    </p>
-  </header>
-  <div>
-      <p>While learning and reading up on C++11 recently, I came across the Short String Optimisation.</p>
-<p>I&rsquo;d at some point been told (or somehow got it into my head), that C <code>union</code>s are generally dangerous and are something you should steer well clear of, so I&rsquo;d never really known what they were about. However, from learning about the SSO it&rsquo;s clear they can make for some very efficient memory use as …</p>
-      <br>
-      <a class="btn" href="http://olipratt.co.uk/the-cpp-short-string-optimisation.html#the-cpp-short-string-optimisation">    Continue reading
 </a>
   </div>
 </article>

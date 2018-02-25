@@ -1,0 +1,225 @@
+
+<!DOCTYPE html>
+<html lang="english">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="HandheldFriendly" content="True" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="index, follow" />
+
+  <link href='//fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,700,400italic' rel='stylesheet' type='text/css'>
+
+    <link rel="stylesheet" type="text/css" href="http://olipratt.co.uk/theme/stylesheet/style.min.css">
+
+  <link rel="stylesheet" type="text/css" href="http://olipratt.co.uk/theme/pygments/monokai.min.css">
+  <link rel="stylesheet" type="text/css" href="http://olipratt.co.uk/theme/font-awesome/css/font-awesome.min.css">
+
+    <link href="http://olipratt.co.uk/static/custom.css" rel="stylesheet">
+
+    <link href="http://olipratt.co.uk/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="Oli Pratt Atom">
+
+
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+
+
+    <!-- Chrome, Firefox OS and Opera -->
+    <meta name="theme-color" content="#282828">
+    <!-- Windows Phone -->
+    <meta name="msapplication-navbutton-color" content="#282828">
+    <!-- iOS Safari -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <!-- Microsoft EDGE -->
+    <meta name="msapplication-TileColor" content="#282828">
+
+<meta name="author" content="Oli Pratt" />
+<meta name="description" content="TL;DR: GNU Make decides whether to rebuild a ‘target’ file based on the modification times of ‘dependency’ files of the target. In some cases those dependencies’ modification times can change without the contents of the files changing, thus forcing an unnecessary rebuild. If make was to decide whether to rebuild by looking at the hash of the contents of the dependency files instead, it would only rebuild when the contents changed. I wrote a …" />
+<meta name="keywords" content="GNU Make, builds">
+
+<meta property="og:site_name" content="Oli Pratt"/>
+<meta property="og:title" content="Rebuilding Makefile Targets Only When Dependency Content Changes"/>
+<meta property="og:description" content="TL;DR: GNU Make decides whether to rebuild a ‘target’ file based on the modification times of ‘dependency’ files of the target. In some cases those dependencies’ modification times can change without the contents of the files changing, thus forcing an unnecessary rebuild. If make was to decide whether to rebuild by looking at the hash of the contents of the dependency files instead, it would only rebuild when the contents changed. I wrote a …"/>
+<meta property="og:locale" content="en_GB"/>
+<meta property="og:url" content="http://olipratt.co.uk/rebuilding-makefile-targets-only-when-dependency-content-changes.html"/>
+<meta property="og:type" content="article"/>
+<meta property="article:published_time" content="2018-02-25 12:27:00+00:00"/>
+<meta property="article:modified_time" content=""/>
+<meta property="article:author" content="http://olipratt.co.uk/author/oli-pratt.html">
+<meta property="article:section" content="GNU Make"/>
+<meta property="article:tag" content="GNU Make"/>
+<meta property="article:tag" content="builds"/>
+<meta property="og:image" content="/static/images/site_logo.png">
+
+  <title>Oli Pratt &ndash; Rebuilding Makefile Targets Only When Dependency Content Changes</title>
+
+</head>
+<body>
+  <aside>
+    <div>
+      <a href="http://olipratt.co.uk">
+        <img src="/static/images/site_logo.png" alt="Oli Pratt" title="Oli Pratt">
+      </a>
+      <h1><a href="http://olipratt.co.uk">Oli Pratt</a></h1>
+
+<p>Software Engineer</p>
+      <nav>
+        <ul class="list">
+          <li><a href="http://olipratt.co.uk/pages/about-me.html#about-me">About Me</a></li>
+
+          <li><a href="https://www.metaswitch.com/" target="_blank">Metaswitch</a></li>
+        </ul>
+      </nav>
+
+      <ul class="social">
+        <li><a class="sc-github" href="https://github.com/olipratt" target="_blank"><i class="fa fa-github"></i></a></li>
+        <li><a class="sc-linkedin" href="https://www.linkedin.com/in/olipratt/" target="_blank"><i class="fa fa-linkedin"></i></a></li>
+        <li><a class="sc-rss" href="/feeds/all.atom.xml" target="_blank"><i class="fa fa-rss"></i></a></li>
+      </ul>
+    </div>
+
+
+  </aside>
+  <main>
+
+    <nav>
+      <a href="http://olipratt.co.uk">    Home
+</a>
+
+      <a href="/archives.html">Archives</a>
+      <a href="/categories.html">Categories</a>
+      <a href="/tags.html">Tags</a>
+
+      <a href="http://olipratt.co.uk/feeds/all.atom.xml">    Atom
+</a>
+
+    </nav>
+
+<article class="single">
+  <header>
+      
+    <h1 id="rebuilding-makefile-targets-only-when-dependency-content-changes">Rebuilding Makefile Targets Only When Dependency Content Changes</h1>
+    <p>
+          Posted on Sun 25 February 2018 in <a href="http://olipratt.co.uk/category/gnu-make.html">GNU Make</a>
+
+
+        &#8226; 6 min read
+    </p>
+  </header>
+
+
+  <div>
+    <h4 id="tldr">TL;DR:</h4>
+<ul>
+<li>
+<p>GNU Make decides whether to rebuild a &lsquo;target&rsquo; file based on the modification times of &lsquo;dependency&rsquo; files of the target.</p>
+</li>
+<li>
+<p>In some cases those dependencies&rsquo; modification times can change <em>without</em> the contents of the files changing, thus forcing an unnecessary rebuild.</p>
+</li>
+<li>
+<p>If <code>make</code> was to decide whether to rebuild by looking at the hash of the contents of the dependency files instead, it would only rebuild when the contents changed.</p>
+</li>
+<li>
+<p>I wrote a utility for doing this as a simple makefile to include, and it is on Github here: <a href="https://github.com/olipratt/hashdeps">hashdeps</a></p>
+</li>
+</ul>
+<h2 id="background">Background</h2>
+<p>A common thing I do when working in a Git repo is switch branches to play about with something on a separate branch, then swap back to the main branch I was working on.</p>
+<p><a href="https://stackoverflow.com/questions/2179722/checking-out-old-file-with-original-create-modified-timestamps/2179825#2179825">Git does not store modification times</a>. When Git changes a file &ndash; say in the above case to replace the copy in the original branch with the version from the new branch, then again to replace it with its original contents on the first branch &ndash; it updates the modification time of the file to be the current time, i.e. the same as if I&rsquo;d just written the file myself.</p>
+<p>Now when you run a <code>make</code> command on this repo, make thinks all these files are newly modified, so all the targets that depend on them need rebuilding &ndash; even if the file content is the same as the last time it built.</p>
+<p>Wouldn&rsquo;t it be better if <code>make</code> instead could tell that the dependency files used to build a target hadn&rsquo;t actually changed, so didn&rsquo;t rebuild anything?</p>
+<h2 id="does-this-already-exist">Does this Already Exist?</h2>
+<p>From various searching online I couldn&rsquo;t find any standard solution to this problem. A fair few Stack Overflow answers amounted to &lsquo;use <a href="http://scons.org/">Scons</a> instead&rsquo;, which seems to support looking at files hashes natively. But I like make and have used it extensively already, and don&rsquo;t want to add more dependencies to small projects &ndash; a big advantage of GNU Make is that it&rsquo;s basically always available.</p>
+<p>After a bit more searching, I did find a <a href="https://www.cmcrossroads.com/article/rebuilding-when-files-checksum-changes">12 year old article</a> which outlines a hack to use file hashes, but in the opposite way to my main use case &ndash; forcing a rebuild if the contents of a file change, but the modification time of the file is still older than the target.</p>
+<p>From this though I thought I could probably take a stab at adapting this to my use case, and hopefully implement something sufficiently generic that this doesn&rsquo;t have to be solved again.</p>
+<h2 id="attempting-an-implementation">Attempting an Implementation</h2>
+<p>I was ready to start giving this a try. Following the article above, creating a file containing the hash of a dependency and inserting it as a dependency in between the target and dependency &ndash; i.e. replace the dependency chain <code>a &lt;- b</code> with <code>a &lt;- hashfile &lt;- b</code> &ndash; seems like a solid start.</p>
+<h3 id="testing">Testing</h3>
+<p>First though, I wanted to be sure I could test anything I made worked. My default would be to go for writing tests in Python, but given this was going to be just running <code>make</code> and looking at files, it felt overkill, so I looked around for shell-based test frameworks.</p>
+<p>I found two main ones:</p>
+<ul>
+<li><a href="https://github.com/kward/shunit2">shunit2</a> - inactive for several years, but with a recent burst of activity.</li>
+<li><a href="https://github.com/sstephenson/bats">bats</a> - inactive for a few years now. Introduced me to <a href="http://testanything.org/">TAP</a> which was something I&rsquo;d never heard of before, but as far as I can tell it never took off.</li>
+</ul>
+<p>The big swinger here for me was that <code>shunit2</code> is actually packaged up &ndash; <code>apt-get install shunit2</code> &lsquo;just works&rsquo; &ndash; plus the interface matches the <code>junit</code> style of test writing I&rsquo;m familiar with from Python&rsquo;s <code>unittest</code>, so I went with that.</p>
+<p>So now we have a <a href="https://github.com/olipratt/hashdeps/commit/cb83540cce7304f4b660d23786af41910a9c8582">first commit of a failing test</a> &ndash; time to get to work!</p>
+<h3 id="better-understanding-of-make">Better Understanding of Make</h3>
+<p>I was very keen to have a simple interface for this utility - in particular, I wanted to be able to add this to any existing makefile by tweaking it as little as possible (i.e. not rewriting all rules with some custom logic for each one), and, if it was going to mean having to change the internals of other makefiles,  then be able to seamlessly enable/disable it from doing anything easily.</p>
+<p>I still couldn&rsquo;t quite see how this was going to work though, because my understanding was that make:</p>
+<ul>
+<li>first reads all the make files to build up the hierarchy of dependencies, then</li>
+<li>works out what things need rebuilding &ndash; i.e. in the hierarchy <code>a &lt;- b &lt;- c</code>, touching <code>c</code> means make decides <code>a</code> and <code>b</code> need rebuilding, so queues up jobs to build each of those,</li>
+<li>finally starts running all the jobs, parallelising any if possible.</li>
+</ul>
+<p>However, the second point above is wrong. After running several jobs with <code>--debug=a</code> passed to <code>make</code> to get lots of detailed logs out, I worked out that make actually builds a dependency of a target and <em>only then</em> compares the timestamp of the dependency and target. So if you don&rsquo;t touch the dependency (i.e. in our case, check that the hash in the file matches so don&rsquo;t touch it), then make will look at the target, decide &lsquo;oh this is already newer so nothing to do here!&rsquo; and move on.</p>
+<p>With this I could build a working utility for my use case.</p>
+<h3 id="supporting-more-use-cases">Supporting More Use Cases</h3>
+<p>Now that I had my use-case working, it made sense to also add in support for the case from the old article above &ndash; forcing regenerating the hash each time to handle the dependency having changed but still having an older modification time than the target. I added that behaviour, controlled by a configuration flag - <code>HASHDEPS_FORCE</code>.</p>
+<p>That still left some undesirable behaviour &ndash; in the case where the dependency isn&rsquo;t changed, but somehow the hash file is newer than the target, then we still rebuild the target. Since make is still in control of deciding what to build, and the hierarchy of dependencies is <code>a &lt;- hashfile &lt;- b</code>, a newer <code>hashfile</code> forces rebuilding of <code>a</code>.</p>
+<p>Now using our knowledge of how make decides if it needs to rebuild a target, what if we push the modification time of the hash file <em>back in time</em> so it&rsquo;s definitely older than the target? It turns out that does work &ndash; so by setting the modification time of the hashfile back say 5 years if the hash it contains still matches the hash of the dependency, we can be confident that the target won&rsquo;t be rebuilt!</p>
+<p>To best see how all cases are handled, <a href="https://github.com/olipratt/hashdeps/blob/master/tests/test_mod_time_combinations.sh">the table in this Unit Test file</a> covers all the cases, and the tests below it check that they really are handled as described.</p>
+<p>In particular notice that now the &lsquo;force&rsquo; case rebuilds the target &lsquo;if-and-only-if&rsquo; the dependency file has actually changed &ndash; so it always does the right thing, at the cost of having to always recalculate the hash every build.</p>
+<h2 id="result">Result</h2>
+<p>The output of all this is that there&rsquo;s now a makefile available that can be included in any other makefile-based build system to add this dependency hashing functionality.</p>
+<p>Here it is: <a href="https://github.com/olipratt/hashdeps">hashdeps</a></p>
+<p><a href="https://github.com/olipratt/hashdeps#converting-a-target-to-use-hashed-dependencies">The API</a> is as clean as I could make it &ndash; you just wrap any dependency names in a make function call <code>hash_deps</code>, and wrap any uses of built in make variables referencing dependencies in <code>unhash_deps</code>. <em>(It does mean that you have to edit any targets you want to use this, but something like that would be necessary anyway unless it was going to apply to all targets blindly.)</em> Also, just setting the make variable <code>HASHDEPS_DISABLE=y</code> disables any hashing function, so your makefiles behave exactly as if <code>hashdeps</code> wasn&rsquo;t even there.</p>
+  </div>
+  <div class="tag-cloud">
+    <p>
+      <a href="http://olipratt.co.uk/tag/gnu-make.html">GNU Make</a>
+      <a href="http://olipratt.co.uk/tag/builds.html">builds</a>
+    </p>
+  </div>
+
+
+  <div class="neighbors">
+    <a class="btn float-left" href="http://olipratt.co.uk/building-vs-code-extensions-in-docker-containers.html" title="Building VS Code Extensions in Docker Containers">
+      <i class="fa fa-angle-left"></i>     Previous Post
+
+    </a>
+  </div>
+
+    <div class="addthis_relatedposts_inline">
+
+
+<!-- Disqus -->
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'olipratt';
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>
+        Please enable JavaScript to view comments.
+
+</noscript>
+<!-- End Disqus -->
+</article>
+
+    <footer>
+<p>&copy; Oli Pratt </p>
+<p>    Powered by <a href="http://getpelican.com" target="_blank">Pelican</a> - <a href="https://github.com/alexandrevicenzi/flex" target="_blank">Flex</a> theme by <a href="http://alexandrevicenzi.com" target="_blank">Alexandre Vicenzi</a>
+</p>    </footer>
+  </main>
+
+
+
+
+<script type="application/ld+json">
+{
+  "@context" : "http://schema.org",
+  "@type" : "Blog",
+  "name": " Oli Pratt ",
+  "url" : "http://olipratt.co.uk",
+  "image": "/static/images/site_logo.png",
+  "description": "Oli Pratt's Thoughts and Writings"
+}
+</script>
+
+</body>
+</html>
