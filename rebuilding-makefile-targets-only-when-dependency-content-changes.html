@@ -50,7 +50,7 @@
 <meta property="article:section" content="GNU Make"/>
 <meta property="article:tag" content="GNU Make"/>
 <meta property="article:tag" content="builds"/>
-<meta property="og:image" content="/static/images/site_logo.png">
+<meta property="og:image" content="http://olipratt.co.uk/static/images/site_logo.png">
 
   <title>Oli Pratt &ndash; Rebuilding Makefile Targets Only When Dependency Content Changes</title>
 
@@ -59,7 +59,7 @@
   <aside>
     <div>
       <a href="http://olipratt.co.uk">
-        <img src="/static/images/site_logo.png" alt="Oli Pratt" title="Oli Pratt">
+        <img src="http://olipratt.co.uk/static/images/site_logo.png" alt="Oli Pratt" title="Oli Pratt">
       </a>
       <h1><a href="http://olipratt.co.uk">Oli Pratt</a></h1>
 
@@ -196,12 +196,30 @@
 
 <script type="application/ld+json">
 {
-  "@context" : "http://schema.org",
-  "@type" : "Blog",
-  "name": " Oli Pratt ",
-  "url" : "http://olipratt.co.uk",
-  "image": "/static/images/site_logo.png",
-  "description": "Oli Pratt's Thoughts and Writings"
+  "@context": "http://schema.org",
+  "@type": "BlogPosting",
+  "name": "Rebuilding Makefile Targets Only When Dependency Content Changes",
+  "headline": "Rebuilding Makefile Targets Only When Dependency Content Changes",
+  "datePublished": "2018-02-25 12:27:00+00:00",
+  "dateModified": "2018-02-25 12:27:00+00:00",
+  "author": {
+    "@type": "Person",
+    
+    "name": "Oli Pratt"
+  },
+  "publisher": {
+    "@type": "Organization",
+    
+    "name": "Oli Pratt",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "http://olipratt.co.uk/static/images/site_logo.png"
+    }
+  },
+  "image": "http://olipratt.co.uk/static/images/site_logo.png",
+  "mainEntityOfPage": "http://olipratt.co.uk/rebuilding-makefile-targets-only-when-dependency-content-changes.html",
+  "url": "http://olipratt.co.uk/rebuilding-makefile-targets-only-when-dependency-content-changes.html",
+  "description": "TL;DR: GNU Make decides whether to rebuild a ‘target’ file based on the modification times of ‘dependency’ files of the target. In some cases those dependencies’ modification times can change without the contents of the files changing, thus forcing an unnecessary rebuild. If make was to decide whether to rebuild by looking at the hash of the contents of the dependency files instead, it would only rebuild when the contents changed. I wrote a …"
 }
 </script>
 

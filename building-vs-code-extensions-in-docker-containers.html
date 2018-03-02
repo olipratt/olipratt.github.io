@@ -50,7 +50,7 @@
 <meta property="article:section" content="Editors"/>
 <meta property="article:tag" content="VS Code"/>
 <meta property="article:tag" content="Docker"/>
-<meta property="og:image" content="/static/images/site_logo.png">
+<meta property="og:image" content="http://olipratt.co.uk/static/images/site_logo.png">
 
   <title>Oli Pratt &ndash; Building VS Code Extensions in Docker Containers</title>
 
@@ -59,7 +59,7 @@
   <aside>
     <div>
       <a href="http://olipratt.co.uk">
-        <img src="/static/images/site_logo.png" alt="Oli Pratt" title="Oli Pratt">
+        <img src="http://olipratt.co.uk/static/images/site_logo.png" alt="Oli Pratt" title="Oli Pratt">
       </a>
       <h1><a href="http://olipratt.co.uk">Oli Pratt</a></h1>
 
@@ -221,12 +221,30 @@ sudo docker run -it <span class="se">\</span>
 
 <script type="application/ld+json">
 {
-  "@context" : "http://schema.org",
-  "@type" : "Blog",
-  "name": " Oli Pratt ",
-  "url" : "http://olipratt.co.uk",
-  "image": "/static/images/site_logo.png",
-  "description": "Oli Pratt's Thoughts and Writings"
+  "@context": "http://schema.org",
+  "@type": "BlogPosting",
+  "name": "Building VS Code Extensions in Docker Containers",
+  "headline": "Building VS Code Extensions in Docker Containers",
+  "datePublished": "2018-02-23 19:52:00+00:00",
+  "dateModified": "2018-02-23 19:52:00+00:00",
+  "author": {
+    "@type": "Person",
+    
+    "name": "Oli Pratt"
+  },
+  "publisher": {
+    "@type": "Organization",
+    
+    "name": "Oli Pratt",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "http://olipratt.co.uk/static/images/site_logo.png"
+    }
+  },
+  "image": "http://olipratt.co.uk/static/images/site_logo.png",
+  "mainEntityOfPage": "http://olipratt.co.uk/building-vs-code-extensions-in-docker-containers.html",
+  "url": "http://olipratt.co.uk/building-vs-code-extensions-in-docker-containers.html",
+  "description": "TL;DR: VS Code is an editor that allows you to write and share custom extensions. These extensions require Node.js and npm installed, which you might not want to install locally - especially given recent, scary issues. Instead, using the Dockerfile and commands below, you can build extensions inside a Docker container and still test and run them inside the VS Code installation on the same machine without Node installed. Background I’ve been using …"
 }
 </script>
 

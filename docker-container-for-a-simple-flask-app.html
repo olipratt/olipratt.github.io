@@ -53,7 +53,7 @@
 <meta property="article:tag" content="Container"/>
 <meta property="article:tag" content="Docker"/>
 <meta property="article:tag" content="microservice"/>
-<meta property="og:image" content="/static/images/site_logo.png">
+<meta property="og:image" content="http://olipratt.co.uk/static/images/site_logo.png">
 
   <title>Oli Pratt &ndash; Docker Container for a simple Flask App</title>
 
@@ -62,7 +62,7 @@
   <aside>
     <div>
       <a href="http://olipratt.co.uk">
-        <img src="/static/images/site_logo.png" alt="Oli Pratt" title="Oli Pratt">
+        <img src="http://olipratt.co.uk/static/images/site_logo.png" alt="Oli Pratt" title="Oli Pratt">
       </a>
       <h1><a href="http://olipratt.co.uk">Oli Pratt</a></h1>
 
@@ -189,12 +189,30 @@ So now you can just go to <code>http://127.0.0.1:5000/</code> in your web browse
 
 <script type="application/ld+json">
 {
-  "@context" : "http://schema.org",
-  "@type" : "Blog",
-  "name": " Oli Pratt ",
-  "url" : "http://olipratt.co.uk",
-  "image": "/static/images/site_logo.png",
-  "description": "Oli Pratt's Thoughts and Writings"
+  "@context": "http://schema.org",
+  "@type": "BlogPosting",
+  "name": "Docker Container for a simple Flask App",
+  "headline": "Docker Container for a simple Flask App",
+  "datePublished": "2017-03-01 21:36:00+00:00",
+  "dateModified": "2017-03-01 21:36:00+00:00",
+  "author": {
+    "@type": "Person",
+    
+    "name": "Oli Pratt"
+  },
+  "publisher": {
+    "@type": "Organization",
+    
+    "name": "Oli Pratt",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "http://olipratt.co.uk/static/images/site_logo.png"
+    }
+  },
+  "image": "http://olipratt.co.uk/static/images/site_logo.png",
+  "mainEntityOfPage": "http://olipratt.co.uk/docker-container-for-a-simple-flask-app.html",
+  "url": "http://olipratt.co.uk/docker-container-for-a-simple-flask-app.html",
+  "description": "Continuing the recent microservices trend, I tried to containerise a previous project, a small REST datastore - microstore. I’m not going to go into detail on what containers are (not least because I don’t think I could!) - but briefly they are a way to package up an app and it’s dependencies so they can be run in their own mini-environment. The best intro is just to follow the tutorial here. Creating the Container …"
 }
 </script>
 

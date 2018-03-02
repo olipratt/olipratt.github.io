@@ -49,7 +49,7 @@
 <meta property="article:author" content="http://olipratt.co.uk/author/oli-pratt.html">
 <meta property="article:section" content="REST"/>
 <meta property="article:tag" content="REST"/>
-<meta property="og:image" content="/static/images/site_logo.png">
+<meta property="og:image" content="http://olipratt.co.uk/static/images/site_logo.png">
 
   <title>Oli Pratt &ndash; REST APIs Notes and References</title>
 
@@ -58,7 +58,7 @@
   <aside>
     <div>
       <a href="http://olipratt.co.uk">
-        <img src="/static/images/site_logo.png" alt="Oli Pratt" title="Oli Pratt">
+        <img src="http://olipratt.co.uk/static/images/site_logo.png" alt="Oli Pratt" title="Oli Pratt">
       </a>
       <h1><a href="http://olipratt.co.uk">Oli Pratt</a></h1>
 
@@ -191,12 +191,30 @@
 
 <script type="application/ld+json">
 {
-  "@context" : "http://schema.org",
-  "@type" : "Blog",
-  "name": " Oli Pratt ",
-  "url" : "http://olipratt.co.uk",
-  "image": "/static/images/site_logo.png",
-  "description": "Oli Pratt's Thoughts and Writings"
+  "@context": "http://schema.org",
+  "@type": "BlogPosting",
+  "name": "REST APIs Notes and References",
+  "headline": "REST APIs Notes and References",
+  "datePublished": "2017-02-12 17:37:00+00:00",
+  "dateModified": "2017-02-25 20:45:00+00:00",
+  "author": {
+    "@type": "Person",
+    
+    "name": "Oli Pratt"
+  },
+  "publisher": {
+    "@type": "Organization",
+    
+    "name": "Oli Pratt",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "http://olipratt.co.uk/static/images/site_logo.png"
+    }
+  },
+  "image": "http://olipratt.co.uk/static/images/site_logo.png",
+  "mainEntityOfPage": "http://olipratt.co.uk/rest-apis-notes-and-references.html",
+  "url": "http://olipratt.co.uk/rest-apis-notes-and-references.html",
+  "description": "After working to create a REST API and client recently, here are some notes and resources I found useful. I’ll keep adding to this as I find new info. General notes Resource collection names should always be plural. Depending on who (client vs server) names resources, creation switches between PUT/POST: client names resources: PUT /kittens/<my_kittens_name> - creates a resource there server names resources: POST /things - Creates a new thing at /things/<autogened_id>, with …"
 }
 </script>
 
